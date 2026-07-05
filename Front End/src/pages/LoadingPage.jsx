@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import axios from "axios";
+import { getStatus, analyzeAll } from "../services/api";
 import { agentsData } from "../data/dummyData";
 import { useReview } from "../context/ReviewContext";
 import AgentStatusItem from "../components/AgentStatusItem";
@@ -52,54 +52,10 @@ export default function LoadingPage() {
     let cancelled = false;
     let pollInterval = null;
 
-    // --- SIMULATED FLOW FOR DEMO / NO PROJECT ---
-    const runDemoSimulation = () => {
-      const timers = [];
-      const schedule = (delay, fn) => {
-        const t = setTimeout(() => { if (!cancelled) fn(); }, delay);
-        timers.push(t);
-      };
-
-      schedule(200, () => {
-        updateStepStatus("extract", "done");
-        updateStepStatus("folder_analysis", "done");
-        setActiveStage("Orchestrating remaining agents...");
-        updateStepStatus("innovation", "in_progress");
-        setOverallProgress(55);
-      });
-      schedule(1500, () => {
-        setActiveStage("Innovation audit complete. Running bug scanning routines...");
-        updateStepStatus("innovation", "done");
-        updateStepStatus("bug", "in_progress");
-        setOverallProgress(68);
-      });
-      schedule(2700, () => {
-        setActiveStage("Bug scanning done. Auditing package and code security...");
-        updateStepStatus("bug", "done");
-        updateStepStatus("security", "in_progress");
-        updateStepStatus("presentation", "in_progress");
-        setOverallProgress(80);
-      });
-      schedule(4100, () => {
-        setActiveStage("Simulating developer interview prompts and recommendations...");
-        updateStepStatus("security", "done");
-        updateStepStatus("presentation", "done");
-        updateStepStatus("interview", "in_progress");
-        updateStepStatus("improvement", "in_progress");
-        setOverallProgress(90);
-      });
-      schedule(5500, () => {
-        setActiveStage("All evaluations complete! Synthesizing final grade...");
-        updateStepStatus("interview", "done");
-        updateStepStatus("improvement", "done");
-        setOverallProgress(100);
-      });
-      schedule(6800, () => navigate("/dashboard"));
-
-      return () => {
-        timers.forEach(clearTimeout);
-      };
-    };
+    if (!projectId) {
+      navigate("/upload");
+      return;
+    }
 
     // --- REAL SWARM ORCHESTRATION ---
     const runRealAnalysis = async () => {
@@ -109,41 +65,34 @@ export default function LoadingPage() {
       setActiveStage("Starting dynamic analysis orchestrator...");
 
       try {
-        // 2. Trigger background analysis orchestration
-        const startRes = await axios.post("http://localhost:5000/api/analyze", {
-          project_id: projectId
-        });
-        
-        if (cancelled) return;
-        
-        if (!startRes.data.success) {
-          throw new Error(startRes.data.error || "Failed to trigger analysis.");
-        }
-
-        const analysisId = startRes.data.analysis_id;
+        // 2. Trigger background analysis orchestration (blocks until complete)
+        const orchestratorPromise = analyzeAll(projectId);
         
         // 3. Poll status endpoint
         pollInterval = setInterval(async () => {
           try {
-            const statusRes = await axios.get(`http://localhost:5000/api/status/${projectId}`);
+            const statusRes = await getStatus(projectId);
             if (cancelled) return;
 
-            const { status, progress_percentage, agents } = statusRes.data;
-            
-            setOverallProgress(progress_percentage);
+            const { status, agents } = statusRes.data;
             
             // Map backend agent statuses to UI steps
+            let completedCount = 0;
+            const totalAgents = 8;
+            
             if (agents) {
               Object.keys(agents).forEach((agentName) => {
                 const agentState = agents[agentName];
+                
                 const statusMapping = {
                   "pending": "pending",
                   "in_progress": "in_progress",
-                  "completed": "done",
+                  "done": "done",
                   "failed": "error"
                 };
                 
-                const uiStatus = statusMapping[agentState.status] || "pending";
+                const uiStatus = statusMapping[agentState] || "pending";
+                if (uiStatus === "done") completedCount++;
                 
                 if (agentName === "folder") {
                   updateStepStatus("folder_analysis", uiStatus);
@@ -153,51 +102,54 @@ export default function LoadingPage() {
               });
             }
 
+            const currentProgress = 10 + Math.floor((completedCount / totalAgents) * 90);
+            setOverallProgress(currentProgress);
+
             // Update user-facing text based on active agents
             const activeAgentNames = Object.keys(agents || {}).filter(
-              (name) => agents[name].status === "in_progress"
+              (name) => agents[name] === "in_progress"
             );
             if (activeAgentNames.length > 0) {
               setActiveStage(`Running ${activeAgentNames.join(", ")} agent(s) in swarm...`);
-            } else if (status === "completed") {
+            } else if (status === "done") {
               setActiveStage("Analysis completed! Fetching final report details...");
             }
 
-            // 4. Finish and pull final report if completed
-            if (status === "completed" || progress_percentage === 100) {
+            if (status === "done") {
               clearInterval(pollInterval);
-              
-              // Fetch full results to store in context
-              const reportRes = await axios.get(`http://localhost:5000/api/reports/${analysisId}`);
-              if (!cancelled && reportRes.data.success !== false) {
-                const reportData = reportRes.data;
-                
-                // Save all agent results to context
-                loadReview(reportData);
-                
-                // Navigate to dashboard
-                setTimeout(() => {
-                  if (!cancelled) navigate("/dashboard");
-                }, 1000);
-              } else {
-                throw new Error("Could not retrieve completed analysis report.");
-              }
-            } else if (status === "failed") {
-              clearInterval(pollInterval);
-              setErrorText("The agent analysis swarm failed to complete.");
-              updateStepStatus("folder_analysis", "error");
             }
-
           } catch (err) {
             console.error("Polling error:", err);
-            // Don't kill polling on a transient network error, just log it
           }
         }, 1500);
+
+        // Wait for the orchestration to actually finish
+        const finalRes = await orchestratorPromise;
+        if (cancelled) return;
+
+        clearInterval(pollInterval);
+        setOverallProgress(100);
+        setActiveStage("All evaluations complete! Synthesizing final grade...");
+        
+        // Emulate structure expected by ReviewContext
+        const reportData = {
+          success: true,
+          project_id: projectId,
+          overall_score: finalRes.data.overall_score,
+          meta: { projectName: uploadedFilename || projectId },
+          results: finalRes.data.results
+        };
+        
+        loadReview(reportData);
+        setTimeout(() => {
+          if (!cancelled) navigate("/dashboard");
+        }, 1000);
 
       } catch (err) {
         if (!cancelled) {
           setErrorText(err.response?.data?.error ?? err.message ?? "Analysis swarm execution failed.");
           setActiveStage("Orchestration failed.");
+          clearInterval(pollInterval);
         }
       }
     };
@@ -208,8 +160,6 @@ export default function LoadingPage() {
       cleanupFn = () => {
         if (pollInterval) clearInterval(pollInterval);
       };
-    } else {
-      cleanupFn = runDemoSimulation();
     }
 
     return () => {
@@ -268,15 +218,11 @@ export default function LoadingPage() {
 
       {/* Bottom action */}
       <div className="flex justify-center">
-        {overallProgress === 100 ? (
+        {overallProgress === 100 && (
           <Button onClick={() => navigate("/dashboard")} className="shadow-lg shadow-violet-500/20">
             View Dashboard
           </Button>
-        ) : !errorText ? (
-          <Button variant="ghost" onClick={() => navigate("/dashboard")} className="text-xs text-slate-500 hover:text-slate-400">
-            Skip Simulation (Go to Dashboard)
-          </Button>
-        ) : null}
+        )}
       </div>
     </div>
   );

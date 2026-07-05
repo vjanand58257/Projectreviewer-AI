@@ -6,10 +6,50 @@ from agents.folder_agent import FolderAgent
 from agents.documentation_agent import DocumentationAgent
 from agents.innovation_agent import InnovationAgent
 from agents.bug_agent import BugAgent
+from agents.security_agent import SecurityAgent
+from agents.presentation_agent import PresentationAgent
+from agents.interview_agent import InterviewAgent
+
+from agents.folder_agent import FolderAgent
+from agents.documentation_agent import DocumentationAgent
+from agents.innovation_agent import InnovationAgent
+from agents.bug_agent import BugAgent
+from agents.security_agent import SecurityAgent
+from agents.presentation_agent import PresentationAgent
+from agents.interview_agent import InterviewAgent
+from services.orchestrator import Orchestrator
 
 logger = logging.getLogger(__name__)
 
 analyze_bp = Blueprint("analyze", __name__, url_prefix="/api/analyze")
+
+@analyze_bp.route("/all/<project_id>", methods=["POST"])
+def analyze_all(project_id: str):
+    """
+    Run all 8 agents via the Orchestrator and return the combined report.
+    """
+    base_dir = Path(current_app.config["BASE_DIR"])
+    project_root = base_dir / "extracted" / project_id
+
+    if not project_root.is_dir():
+        return jsonify({
+            "success": False,
+            "error": f"No extracted project found for project_id '{project_id}'."
+        }), 404
+
+    try:
+        report = Orchestrator.run_all(project_id, project_root, project_root.name)
+        return jsonify(report), 200
+    except Exception as e:
+        logger.error(f"Orchestration failed for {project_id}: {e}", exc_info=True)
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@analyze_bp.route("/status/<project_id>", methods=["GET"])
+def get_status(project_id: str):
+    """
+    Return the current status of the orchestrator run for the project.
+    """
+    return jsonify(Orchestrator.get_status(project_id)), 200
 
 @analyze_bp.route("/folder/<project_id>", methods=["POST"])
 def analyze_folder(project_id: str):
@@ -189,3 +229,114 @@ def analyze_bug(project_id: str):
         }), 500
 
 
+@analyze_bp.route("/security/<project_id>", methods=["POST"])
+def analyze_security(project_id: str):
+    """
+    Run the Security Agent against an already-extracted project.
+    Scans .py/.js/.jsx/.ts/.tsx/.java files (cap=15, 35 000 chars).
+    Explicitly excludes .env.example-style files to prevent false positives.
+    """
+    base_dir = Path(current_app.config["BASE_DIR"])
+    project_root = base_dir / "extracted" / project_id
+
+    logger.info(f"Security analysis requested for project: {project_id}")
+
+    if not project_root.is_dir():
+        return jsonify({
+            "success": False,
+            "error": f"No extracted project found for project_id '{project_id}'."
+        }), 404
+
+    try:
+        agent = SecurityAgent()
+        result = agent.run({"project_root": str(project_root)})
+        return jsonify({"success": True, "project_id": project_id, **result}), 200
+    except Exception as e:
+        logger.error(f"SecurityAgent failed for {project_id}: {e}", exc_info=True)
+        return jsonify({"success": False, "error": f"Security analysis failed: {e}"}), 500
+
+
+@analyze_bp.route("/presentation/<project_id>", methods=["POST"])
+def analyze_presentation(project_id: str):
+    """
+    Run the Presentation Agent against an already-extracted project.
+    Pipeline:
+      1. FolderAgent runs offline (no Gemini) to produce structural signals.
+      2. Result injected into PresentationAgent — no second filesystem scan.
+    """
+    base_dir = Path(current_app.config["BASE_DIR"])
+    project_root = base_dir / "extracted" / project_id
+
+    logger.info(f"Presentation analysis requested for project: {project_id}")
+
+    if not project_root.is_dir():
+        return jsonify({
+            "success": False,
+            "error": f"No extracted project found for project_id '{project_id}'."
+        }), 404
+
+    try:
+        # Step 1: FolderAgent (offline, Tier 1)
+        logger.info(f"[presentation route] Running FolderAgent (offline) for: {project_id}")
+        folder_results = FolderAgent().run({"project_root": str(project_root)})
+        logger.info(
+            f"[presentation route] FolderAgent done (score={folder_results.get('score')}/100). "
+            "Passing to PresentationAgent — no re-scan."
+        )
+
+        # Step 2: PresentationAgent (consumes folder_results)
+        result = PresentationAgent().run({
+            "project_root": str(project_root),
+            "project_name": project_root.name,
+            "folder_results": folder_results,
+        })
+        return jsonify({
+            "success": True,
+            "project_id": project_id,
+            "folder_score": folder_results.get("score"),
+            **result
+        }), 200
+    except Exception as e:
+        logger.error(f"PresentationAgent failed for {project_id}: {e}", exc_info=True)
+        return jsonify({"success": False, "error": f"Presentation analysis failed: {e}"}), 500
+
+
+@analyze_bp.route("/interview/<project_id>", methods=["POST"])
+def analyze_interview(project_id: str):
+    """
+    Run the Interview Agent against an already-extracted project.
+    Pipeline:
+      1. FolderAgent runs offline (no Gemini) to produce structural signals.
+      2. Result injected into InterviewAgent — no second filesystem scan.
+    """
+    base_dir = Path(current_app.config["BASE_DIR"])
+    project_root = base_dir / "extracted" / project_id
+
+    logger.info(f"Interview analysis requested for project: {project_id}")
+
+    if not project_root.is_dir():
+        return jsonify({
+            "success": False,
+            "error": f"No extracted project found for project_id '{project_id}'."
+        }), 404
+
+    try:
+        # Step 1: FolderAgent (offline, Tier 1)
+        logger.info(f"[interview route] Running FolderAgent (offline) for: {project_id}")
+        folder_results = FolderAgent().run({"project_root": str(project_root)})
+        
+        # Step 2: InterviewAgent (consumes folder_results)
+        result = InterviewAgent().run({
+            "project_root": str(project_root),
+            "project_name": project_root.name,
+            "folder_results": folder_results,
+        })
+        return jsonify({
+            "success": True,
+            "project_id": project_id,
+            "folder_score": folder_results.get("score"),
+            **result
+        }), 200
+    except Exception as e:
+        logger.error(f"InterviewAgent failed for {project_id}: {e}", exc_info=True)
+        return jsonify({"success": False, "error": f"Interview analysis failed: {e}"}), 500

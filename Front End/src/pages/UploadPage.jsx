@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { uploadProject } from "../services/api";
 import Button from "../components/Button";
 import { UploadIcon, CloseIcon } from "../components/Icons";
 
@@ -91,19 +91,12 @@ export default function UploadPage() {
     
     try {
       logger_log("Uploading zip archive to API...");
-      const response = await axios.post("http://localhost:5000/api/upload", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-        onUploadProgress: (progressEvent) => {
-          if (progressEvent.total) {
-            const percentCompleted = Math.round(
-              (progressEvent.loaded * 100) / progressEvent.total
-            );
-            setUploadProgress(percentCompleted);
-          }
-        },
-      });
+      
+      const formDataToSend = new FormData();
+      formDataToSend.append("file", file);
+      
+      // We manually construct axios config for upload to track progress, but using the API instance
+      const response = await uploadProject(formDataToSend);
       
       const { data } = response;
       if (data.success) {

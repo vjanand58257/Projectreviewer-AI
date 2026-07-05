@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import axios from "axios";
-import { agentsData, overallEvaluation } from "../data/dummyData";
+import { getReport, getReportsList } from "../services/api";
+import { agentsData } from "../data/dummyData";
 import { useReview } from "../context/ReviewContext";
 import ScoreCard from "../components/ScoreCard";
 import Button from "../components/Button";
@@ -12,11 +12,10 @@ export default function DashboardPage() {
   const [historyList, setHistoryList] = useState([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
-  // Fetch reports list for the history panel
   const fetchHistory = async () => {
     setIsLoadingHistory(true);
     try {
-      const res = await axios.get("http://localhost:5000/api/reports?limit=10");
+      const res = await getReportsList();
       if (res.data && res.data.success) {
         setHistoryList(res.data.reports || []);
       }
@@ -33,7 +32,7 @@ export default function DashboardPage() {
 
   const handleLoadReport = async (analysisId) => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/reports/${analysisId}`);
+      const res = await getReport(analysisId);
       if (res.data && res.data.success !== false) {
         loadReview(res.data);
       }
@@ -57,8 +56,21 @@ export default function DashboardPage() {
     }
   };
 
+  // If no active review, show an empty state
+  if (!activeReview) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
+        <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">No Review Loaded</h2>
+        <p className="text-slate-500 dark:text-slate-400">Please upload a project to see the dashboard.</p>
+        <Link to="/upload">
+          <Button>Go to Upload</Button>
+        </Link>
+      </div>
+    );
+  }
+
   // Derive overall metrics dynamically
-  const displayScore = activeReview ? activeReview.overall_score : overallEvaluation.score;
+  const displayScore = activeReview.overall_score || 0;
   
   const getGrade = (score) => {
     if (score >= 90) return "Excellent";
@@ -66,32 +78,32 @@ export default function DashboardPage() {
     if (score >= 70) return "Average";
     return "Needs Work";
   };
-  const displayGrade = activeReview ? getGrade(displayScore) : overallEvaluation.grade;
+  const displayGrade = getGrade(displayScore);
 
   const displaySummary = activeReview?.results?.improvement?.data?.highlights?.[0] || 
                          activeReview?.results?.improvement?.data?.findings?.[0]?.description ||
-                         overallEvaluation.summary;
+                         "Analysis completed. Please review individual agent results below.";
 
   const displayMeta = {
-    projectName: activeReview?.meta?.project_name || activeReview?.project_id || overallEvaluation.meta.projectName,
-    analyzedAt: activeReview?.created_at ? new Date(activeReview.created_at).toLocaleString() : overallEvaluation.meta.analyzedAt,
-    filesScanned: activeReview?.meta?.files_scanned ?? overallEvaluation.meta.filesScanned,
-    loc: activeReview?.meta?.loc ?? overallEvaluation.meta.loc,
-    language: activeReview?.meta?.language ?? overallEvaluation.meta.language
+    projectName: activeReview?.meta?.projectName || activeReview?.project_id || "Unknown Project",
+    analyzedAt: activeReview?.created_at ? new Date(activeReview.created_at).toLocaleString() : "Just now",
+    filesScanned: activeReview?.meta?.files_scanned ?? "N/A",
+    loc: activeReview?.meta?.loc ?? "N/A",
+    language: activeReview?.meta?.language ?? "N/A"
   };
 
-  // Merge real API results over dummy data for agents that have run
+  // Merge real API results over dummy data metadata for agents that have run
   const mergedAgents = agentsData.map((agent) => {
-    const real = agentResults[agent.id];
-    if (!real) return agent;
+    const real = activeReview.results?.[agent.id];
+    if (!real) return { ...agent, score: 0, bullets: ["Agent did not run or failed."] };
     
     // Safely extract text from findings (which can be objects or strings)
-    const findingsList = (real.data.findings || []).map((f) => 
+    const findingsList = (real.data?.findings || []).map((f) => 
       typeof f === "object" && f !== null ? f.description : f
     );
     
     // Safely extract text from recommendations
-    const recsList = (real.data.recommendations || []).map((r) => 
+    const recsList = (real.data?.recommendations || []).map((r) => 
       typeof r === "object" && r !== null ? r.action : r
     );
 
@@ -100,9 +112,9 @@ export default function DashboardPage() {
       score: real.score,
       errors: real.errors || [],
       bullets: [
-        ...(real.data.highlights || []).slice(0, 3),
+        ...(real.data?.highlights || []).slice(0, 2),
         ...(findingsList.length > 0
-          ? [`Findings: ${findingsList.slice(0, 2).join(" | ")}`]
+          ? [`Findings: ${findingsList[0]}`]
           : []),
         ...(recsList.length > 0
           ? [`Recommendation: ${recsList[0]}`]
@@ -293,6 +305,29 @@ export default function DashboardPage() {
                 No agents matching this filter.
               </p>
             </div>
+          )}
+        </div>
+
+        {/* Prioritized Improvements / Recommendations */}
+        <div className="bg-white dark:bg-slate-905 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-sm transition-colors duration-300 mt-8">
+          <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-4">
+            Prioritized Action Plan
+          </h3>
+          {activeReview.results?.improvement?.data?.recommendations?.length > 0 ? (
+            <ul className="space-y-3">
+              {activeReview.results.improvement.data.recommendations.map((rec, idx) => (
+                <li key={idx} className="text-sm text-slate-700 dark:text-slate-300 font-medium bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800/60 flex items-start gap-3">
+                  <span className="text-violet-500 mt-0.5 shrink-0">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  </span>
+                  <span>{rec}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-slate-500 dark:text-slate-400">No specific recommendations provided by the Improvement Agent.</p>
           )}
         </div>
       </div>
