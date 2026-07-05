@@ -10,134 +10,189 @@ logger = logging.getLogger(__name__)
 
 upload_bp = Blueprint("upload", __name__, url_prefix="/api")
 
-# Allowed MIME types for ZIP files
+# Maximum upload size (25 MB)
+MAX_UPLOAD_SIZE = 25 * 1024 * 1024
+
 ALLOWED_MIME_TYPES = {
     "application/zip",
     "application/x-zip-compressed",
     "application/x-zip",
-    "multipart/x-zip"
+    "multipart/x-zip",
+    "application/octet-stream"   # Many browsers use this for ZIP
 }
 
+
 def allowed_file(filename):
-    """Helper to check if file extension is allowed."""
-    ext = Path(filename).suffix.lower()
-    return ext == ".zip"
+    return Path(filename).suffix.lower() == ".zip"
+
 
 @upload_bp.route("/upload", methods=["POST"])
 def upload_project():
-    logger.info("Starting codebase file upload processing...")
-    
-    # 1. Check if 'file' field is present in request
+    logger.info("========== Upload Started ==========")
+
     if "file" not in request.files:
-        logger.error("Upload failed: Missing 'file' field in request.")
         return jsonify({
             "success": False,
-            "error": "No file part in the request. Make sure to upload with key 'file'."
+            "error": "No file found in request."
         }), 400
 
     file = request.files["file"]
 
-    # 2. Check if a file was actually selected
     if file.filename == "":
-        logger.error("Upload failed: No file selected in form data.")
         return jsonify({
             "success": False,
             "error": "No file selected."
         }), 400
 
-    # 3. Validate file extension
     if not allowed_file(file.filename):
-        logger.error(f"Upload failed: Invalid extension for file '{file.filename}'. Only ZIP is allowed.")
         return jsonify({
             "success": False,
-            "error": "Only ZIP files are allowed (extension must be .zip)."
+            "error": "Only .zip files are allowed."
         }), 400
 
-    # 4. Validate MIME type
-    mime_type = file.content_type
-    logger.info(f"Uploaded file MIME type: {mime_type}")
-    if mime_type not in ALLOWED_MIME_TYPES:
-        # Some OS/Browsers send empty or octet-stream MIME types for zip, but we strictly validate MIME type as requested.
-        # To be robust, if it's application/octet-stream, we log a warning but allow it if extension is zip, 
-        # but the prompt says: "validate both file extension and MIME type". So we strictly validate MIME.
-        logger.error(f"Upload failed: Invalid MIME type '{mime_type}'. Only ZIP MIME types allowed.")
+    mime = file.content_type
+
+    logger.info(f"MIME Type : {mime}")
+
+    if mime not in ALLOWED_MIME_TYPES:
         return jsonify({
             "success": False,
-            "error": "Only ZIP files are allowed (invalid MIME type)."
+            "error": f"Invalid MIME type ({mime})"
         }), 400
 
     try:
-        # 5. Setup upload directory path
-        upload_folder = Path(current_app.config.get("UPLOAD_FOLDER"))
+
+        ##################################################
+        # Upload Folder
+        ##################################################
+
+        upload_folder = Path(current_app.config["UPLOAD_FOLDER"])
         upload_folder.mkdir(parents=True, exist_ok=True)
 
-        # 6. Generate UUID filenames to avoid collision
         project_id = str(uuid.uuid4())
-        original_filename = secure_filename(file.filename)
-        saved_filename = f"{project_id}.zip"
-        dest_path = upload_folder / saved_filename
 
-        # 7. Save file
-        logger.info(f"Saving uploaded ZIP '{original_filename}' to '{dest_path}'")
-        file.save(str(dest_path))
-        
-        # Calculate saved file size
-        file_size = dest_path.stat().st_size
-        upload_time = datetime.now(timezone.utc).isoformat()
+        original_name = secure_filename(file.filename)
+        saved_name = f"{project_id}.zip"
 
-        # 8. Extract synchronously using ZipService
-        base_dir = Path(current_app.config.get("BASE_DIR"))
+        zip_path = upload_folder / saved_name
+
+        ##################################################
+        # Save ZIP
+        ##################################################
+
+        logger.info("Saving ZIP...")
+        file.save(zip_path)
+
+        file_size = zip_path.stat().st_size
+
+        logger.info(f"ZIP Size = {file_size / (1024*1024):.2f} MB")
+
+        ##################################################
+        # Reject oversized uploads
+        ##################################################
+
+        if file_size > MAX_UPLOAD_SIZE:
+            zip_path.unlink(missing_ok=True)
+
+            return jsonify({
+                "success": False,
+                "error": "ZIP file exceeds the maximum allowed size of 25 MB."
+            }), 413
+
+        ##################################################
+        # Extract
+        ##################################################
+
+        base_dir = Path(current_app.config["BASE_DIR"])
+
         extract_root = base_dir / "extracted" / project_id
-        
-        logger.info(f"Extracting ZIP for project {project_id} to {extract_root}")
-        from services.zip_service import ZipService
-        try:
-            stats = ZipService.extract_zip(dest_path, extract_root)
-        except PermissionError as pe:
-            logger.error(f"Security Alert: Path traversal during extraction: {pe}")
-            # Clean up saved zip
-            dest_path.unlink(missing_ok=True)
-            return jsonify({
-                "success": False,
-                "error": str(pe),
-                "errors": [str(pe)]
-            }), 422
-        except (ValueError, zipfile.BadZipFile) as ve:
-            logger.error(f"Extraction failed (corrupt/invalid zip): {ve}")
-            dest_path.unlink(missing_ok=True)
-            return jsonify({
-                "success": False,
-                "error": "The uploaded file is not a valid ZIP archive."
-            }), 400
-        except Exception as e:
-            logger.error(f"Unexpected extraction failure: {e}", exc_info=True)
-            dest_path.unlink(missing_ok=True)
-            return jsonify({
-                "success": False,
-                "error": f"Extraction failed unexpectedly: {e}"
-            }), 500
 
-        logger.info(f"Upload and extraction successful. Project ID: {project_id}")
+        logger.info("Extracting ZIP...")
+
+        from services.zip_service import ZipService
+
+        stats = ZipService.extract_zip(
+            zip_path,
+            extract_root
+        )
+
+        ##################################################
+        # Remove uploaded ZIP to save disk space
+        ##################################################
+
+        zip_path.unlink(missing_ok=True)
+
+        logger.info("Extraction Complete")
 
         return jsonify({
             "success": True,
             "project_id": project_id,
-            "filename": original_filename,
+            "filename": original_name,
             "size": file_size,
-            "uploadTime": upload_time,
+            "uploadTime": datetime.now(
+                timezone.utc
+            ).isoformat(),
             "metadata": {
-                "filename": original_filename,
+                "filename": original_name,
                 "size_bytes": file_size,
                 "extracted_files_count": stats["file_count"],
                 "primary_language": stats["primary_language"],
                 "detected_frameworks": stats["detected_frameworks"]
             }
-        }), 200
+        })
 
-    except Exception as e:
-        logger.error(f"Upload handler failed: {e}", exc_info=True)
+    except PermissionError as e:
+
+        logger.exception(e)
+
+        try:
+            zip_path.unlink(missing_ok=True)
+        except:
+            pass
+
         return jsonify({
             "success": False,
-            "error": "Internal server error during file upload processing."
+            "error": str(e)
+        }), 422
+
+    except (zipfile.BadZipFile, ValueError) as e:
+
+        logger.exception(e)
+
+        try:
+            zip_path.unlink(missing_ok=True)
+        except:
+            pass
+
+        return jsonify({
+            "success": False,
+            "error": "Invalid ZIP archive."
+        }), 400
+
+    except MemoryError:
+
+        logger.exception("MemoryError")
+
+        try:
+            zip_path.unlink(missing_ok=True)
+        except:
+            pass
+
+        return jsonify({
+            "success": False,
+            "error": "Server ran out of memory while processing the ZIP. Please upload a smaller project."
         }), 500
 
+    except Exception as e:
+
+        logger.exception(e)
+
+        try:
+            zip_path.unlink(missing_ok=True)
+        except:
+            pass
+
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
