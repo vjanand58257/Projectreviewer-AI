@@ -12,6 +12,8 @@ export default function UploadPage() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const abortController = useRef(null);
+  const fileInputRef = useRef(null);
+
   const navigate = useNavigate();
 
   const handleDrag = (e) => {

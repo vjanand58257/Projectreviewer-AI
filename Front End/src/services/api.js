@@ -2,17 +2,11 @@ import axios from "axios";
 
 const API = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
-  timeout: 300000, // 5 minutes
+  timeout: 300000,
 });
 
-// Health
 export const getHealth = () => API.get("/health");
 
-// Upload project
-// config allows:
-// - onUploadProgress
-// - signal (AbortController)
-// - any other Axios options
 export const uploadProject = (formData, config = {}) =>
   API.post("/upload", formData, {
     headers: {
@@ -21,7 +15,6 @@ export const uploadProject = (formData, config = {}) =>
     ...config,
   });
 
-// Analysis
 export const getStatus = (projectId) =>
   API.get(`/analyze/status/${projectId}`);
 
