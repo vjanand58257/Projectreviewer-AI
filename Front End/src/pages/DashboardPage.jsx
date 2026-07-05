@@ -163,13 +163,22 @@ export default function DashboardPage() {
         <div className="w-full bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-sm transition-colors duration-300">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
             {/* Big Score Card */}
-            <div className="flex flex-col sm:flex-row items-center gap-6 lg:border-r lg:border-slate-200 dark:lg:border-slate-800 lg:pr-8">
+            <div className="flex flex-col sm:flex-row items-center gap-8 lg:border-r lg:border-slate-200 dark:lg:border-slate-800 lg:pr-10 relative">
+              
+              {/* Background ambient glow behind the gauge */}
+              <div className={`absolute top-1/2 left-6 -translate-y-1/2 w-32 h-32 blur-[50px] rounded-full pointer-events-none -z-10 ${
+                displayScore >= 90 ? "bg-emerald-500/30" :
+                displayScore >= 80 ? "bg-indigo-500/30" :
+                displayScore >= 70 ? "bg-amber-500/30" :
+                "bg-rose-500/30"
+              }`} />
+
               {/* Circular Progress Gauge */}
-              <div className="relative w-36 h-36 shrink-0 flex items-center justify-center">
-                <svg className="w-full h-full transform -rotate-95" viewBox="0 0 100 100">
+              <div className="relative w-44 h-44 shrink-0 flex items-center justify-center drop-shadow-xl hover:scale-105 transition-transform duration-500">
+                <svg className="w-full h-full transform -rotate-95 drop-shadow-[0_0_8px_rgba(139,92,246,0.5)]" viewBox="0 0 100 100">
                   {/* Background Ring */}
                   <circle
-                    className="text-slate-100 dark:text-slate-850"
+                    className="text-slate-100 dark:text-slate-800/80"
                     strokeWidth="8"
                     stroke="currentColor"
                     fill="transparent"
@@ -179,7 +188,12 @@ export default function DashboardPage() {
                   />
                   {/* Foreground Progress */}
                   <circle
-                    className="text-violet-650 dark:text-violet-500 transition-all duration-1000 ease-out"
+                    className={`${
+                      displayScore >= 90 ? "text-emerald-500" :
+                      displayScore >= 80 ? "text-indigo-500" :
+                      displayScore >= 70 ? "text-amber-500" :
+                      "text-rose-500"
+                    } transition-all duration-1000 ease-out`}
                     strokeWidth="8"
                     strokeDasharray={`${2 * Math.PI * 40}`}
                     strokeDashoffset={`${2 * Math.PI * 40 * (1 - displayScore / 100)}`}
@@ -192,19 +206,19 @@ export default function DashboardPage() {
                   />
                 </svg>
                 {/* Inner score */}
-                <div className="absolute text-center">
-                  <span className="text-4xl font-black text-slate-850 dark:text-white">
+                <div className="absolute flex flex-col items-center justify-center">
+                  <span className="text-5xl font-black text-slate-900 dark:text-white tracking-tighter drop-shadow-sm">
                     {displayScore}
                   </span>
-                  <span className="text-slate-400 dark:text-slate-500 font-bold text-sm block -mt-1">
+                  <span className="text-slate-400 dark:text-slate-500 font-extrabold text-xs block uppercase tracking-widest mt-1">
                     / 100
                   </span>
                 </div>
               </div>
 
               {/* Score Meta details */}
-              <div className="text-center sm:text-left space-y-1">
-                <span className={`inline-flex px-3 py-1 rounded-full text-xs font-bold border ${getScoreColor(displayScore)}`}>
+              <div className="text-center sm:text-left space-y-2 z-10">
+                <span className={`inline-flex px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest border shadow-sm ${getScoreColor(displayScore)}`}>
                   Grade: {displayGrade}
                 </span>
                 <h3 className="text-xl font-extrabold text-slate-855 dark:text-slate-100 mt-2">
@@ -309,20 +323,23 @@ export default function DashboardPage() {
         </div>
 
         {/* Prioritized Improvements / Recommendations */}
-        <div className="bg-white dark:bg-slate-905 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-sm transition-colors duration-300 mt-8">
-          <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-4">
+        <div className="bg-gradient-to-br from-violet-500/5 to-indigo-500/5 dark:from-violet-900/10 dark:to-indigo-900/10 border border-violet-500/20 dark:border-violet-500/30 rounded-3xl p-6 sm:p-8 shadow-lg transition-colors duration-300 mt-12 relative overflow-hidden backdrop-blur-md">
+          {/* Subtle Background Glow */}
+          <div className="absolute -top-24 -right-24 w-64 h-64 bg-violet-500/20 dark:bg-violet-500/10 blur-[80px] rounded-full pointer-events-none -z-10" />
+
+          <h3 className="text-2xl font-extrabold text-slate-800 dark:text-white mb-6">
             Prioritized Action Plan
           </h3>
           {activeReview.results?.improvement?.data?.recommendations?.length > 0 ? (
-            <ul className="space-y-3">
+            <ul className="space-y-4">
               {activeReview.results.improvement.data.recommendations.map((rec, idx) => (
-                <li key={idx} className="text-sm text-slate-700 dark:text-slate-300 font-medium bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800/60 flex items-start gap-3">
-                  <span className="text-violet-500 mt-0.5 shrink-0">
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <li key={idx} className="group text-sm text-slate-700 dark:text-slate-200 font-medium bg-white/60 dark:bg-slate-900/50 p-5 rounded-2xl border border-slate-200 dark:border-slate-700/60 flex items-start gap-4 transition-all duration-300 hover:shadow-md hover:border-violet-500/30 hover:-translate-y-0.5">
+                  <span className="flex items-center justify-center w-8 h-8 rounded-full bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-400 shrink-0 mt-0.5 group-hover:scale-110 group-hover:bg-violet-500 group-hover:text-white transition-all duration-300 shadow-sm">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
                   </span>
-                  <span>{rec}</span>
+                  <span className="leading-relaxed mt-1">{rec}</span>
                 </li>
               ))}
             </ul>

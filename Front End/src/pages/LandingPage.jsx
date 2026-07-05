@@ -38,28 +38,33 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="relative overflow-hidden flex flex-col items-center">
-      {/* Background Glows */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-indigo-500/10 dark:bg-indigo-500/5 blur-[120px] rounded-full pointer-events-none -z-10" />
-      <div className="absolute top-1/3 left-1/4 w-[350px] h-[350px] bg-violet-500/10 dark:bg-violet-500/5 blur-[100px] rounded-full pointer-events-none -z-10 animate-pulse" />
+    <div className="relative overflow-hidden flex flex-col items-center min-h-[calc(100vh-100px)]">
+      {/* Background Glows & Mesh */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/20 via-slate-900/0 to-transparent dark:from-indigo-900/40 dark:via-slate-950/0 pointer-events-none -z-20" />
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-500/20 dark:bg-indigo-500/10 blur-[120px] rounded-full pointer-events-none -z-10 mix-blend-screen" />
+      <div className="absolute top-1/3 left-1/4 w-[450px] h-[450px] bg-violet-500/20 dark:bg-violet-500/10 blur-[100px] rounded-full pointer-events-none -z-10 animate-pulse mix-blend-screen" />
+      <div className="absolute top-2/3 right-1/4 w-[500px] h-[500px] bg-fuchsia-500/10 dark:bg-fuchsia-500/5 blur-[120px] rounded-full pointer-events-none -z-10" />
 
       {/* Hero Section */}
-      <section className="w-full max-w-4xl text-center pt-10 pb-16 md:pt-16 md:pb-24">
+      <section className="w-full max-w-5xl text-center pt-16 pb-20 md:pt-24 md:pb-32 px-4 z-10">
         {/* Decorative Badge */}
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-violet-500/35 bg-violet-500/10 text-violet-650 dark:text-violet-300 text-xs font-semibold uppercase tracking-wider mb-6 animate-bounce">
-          <SparklesIcon className="w-4 h-4 shrink-0" />
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-violet-500/30 bg-violet-500/10 backdrop-blur-md text-violet-700 dark:text-violet-300 text-xs font-bold uppercase tracking-widest mb-8 hover:bg-violet-500/20 transition-colors duration-300 shadow-[0_0_15px_rgba(139,92,246,0.15)] cursor-default">
+          <SparklesIcon className="w-4 h-4 shrink-0 animate-pulse text-violet-500" />
           <span>Next-Generation Project Evaluation</span>
         </div>
 
-        <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight mb-6">
-          ProjectReviewer <span className="bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent">AI</span>
+        <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold tracking-tight mb-8 text-slate-900 dark:text-white drop-shadow-sm">
+          ProjectReviewer{" "}
+          <span className="bg-gradient-to-br from-violet-600 via-indigo-500 to-fuchsia-500 bg-clip-text text-transparent drop-shadow-md animate-gradient-x">
+            AI
+          </span>
         </h1>
 
-        <p className="text-xl sm:text-2xl text-slate-600 dark:text-slate-350 font-medium max-w-3xl mx-auto leading-relaxed mb-6">
+        <p className="text-xl sm:text-2xl md:text-3xl text-slate-700 dark:text-slate-300 font-medium max-w-4xl mx-auto leading-relaxed mb-8">
           An Agentic AI Platform for Automated Software Project Evaluation
         </p>
 
-        <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 max-w-2xl mx-auto mb-10">
+        <p className="text-base sm:text-lg text-slate-500 dark:text-slate-400 max-w-2xl mx-auto mb-12 leading-relaxed">
           Upload your project .zip codebase and get immediate feedbacks across architecture, bugs, security vulnerabilities, documentation, presentation UI, and interview readiness. Powered by a collaborative swarm of 8 specialized Gemini agents.
         </p>
 
@@ -96,24 +101,25 @@ export default function LandingPage() {
           {agentsPreview.map((agent, index) => (
             <div
               key={index}
-              className={`p-6 rounded-2xl border transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 ${
+              className={`group p-6 rounded-3xl border transition-all duration-300 hover:shadow-2xl hover:-translate-y-1.5 backdrop-blur-sm bg-white/40 dark:bg-slate-900/40 relative overflow-hidden ${
                 colorStyles[agent.color] || "border-slate-800"
               }`}
             >
-              <div className="flex items-center gap-2 mb-3">
-                <span className={`w-2.5 h-2.5 rounded-full ${agent.color === "indigo" ? "bg-indigo-500" :
-                  agent.color === "blue" ? "bg-blue-500" :
-                  agent.color === "violet" ? "bg-violet-500" :
-                  agent.color === "rose" ? "bg-rose-500" :
-                  agent.color === "emerald" ? "bg-emerald-500" :
-                  agent.color === "cyan" ? "bg-cyan-500" :
-                  agent.color === "amber" ? "bg-amber-500" :
-                  "bg-orange-500"}`} />
-                <h3 className={`font-bold text-base ${textStyles[agent.color] || 'text-indigo-400'}`}>
+              <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-${agent.color}-500/20 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+              <div className="flex items-center gap-3 mb-4 relative z-10">
+                <span className={`w-3 h-3 rounded-full shadow-[0_0_8px_rgba(0,0,0,0.5)] ${agent.color === "indigo" ? "bg-indigo-500 shadow-indigo-500/50" :
+                  agent.color === "blue" ? "bg-blue-500 shadow-blue-500/50" :
+                  agent.color === "violet" ? "bg-violet-500 shadow-violet-500/50" :
+                  agent.color === "rose" ? "bg-rose-500 shadow-rose-500/50" :
+                  agent.color === "emerald" ? "bg-emerald-500 shadow-emerald-500/50" :
+                  agent.color === "cyan" ? "bg-cyan-500 shadow-cyan-500/50" :
+                  agent.color === "amber" ? "bg-amber-500 shadow-amber-500/50" :
+                  "bg-orange-500 shadow-orange-500/50"}`} />
+                <h3 className={`font-extrabold text-lg tracking-tight ${textStyles[agent.color] || 'text-indigo-400'}`}>
                   {agent.name}
                 </h3>
               </div>
-              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-medium relative z-10">
                 {agent.desc}
               </p>
             </div>

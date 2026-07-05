@@ -63,7 +63,7 @@ export default function ScoreCard({ agent }) {
 
   return (
     <div
-      className={`relative group bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl transition-all duration-300 hover:-translate-y-1 shadow-sm hover:shadow-xl ${
+      className={`relative group bg-white/70 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl transition-all duration-500 hover:-translate-y-1.5 shadow-sm hover:shadow-[0_10px_40px_-10px_rgba(0,0,0,0.2)] overflow-hidden backdrop-blur-md ${
         borderClasses[color] || "hover:border-slate-700 shadow-slate-900/5"
       }`}
     >

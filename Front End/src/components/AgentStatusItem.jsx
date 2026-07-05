@@ -13,17 +13,17 @@ export default function AgentStatusItem({ agent }) {
       label: "Pending"
     },
     in_progress: {
-      border: "border-indigo-500/40 animate-pulse shadow-md shadow-indigo-500/5",
-      bg: "bg-indigo-950/10 dark:bg-indigo-950/10 light:bg-indigo-50/50",
-      text: "text-indigo-400",
-      badge: "bg-indigo-500/10 text-indigo-400 animate-pulse border border-indigo-500/20",
+      border: "border-indigo-500/50 shadow-[0_0_20px_rgba(99,102,241,0.25)] scale-[1.01] z-10",
+      bg: "bg-indigo-50/50 dark:bg-indigo-950/20 bg-gradient-to-r from-indigo-500/5 via-indigo-400/10 to-indigo-500/5 bg-[length:200%_100%] animate-[pulse_2s_ease-in-out_infinite]",
+      text: "text-indigo-500 dark:text-indigo-400 font-semibold",
+      badge: "bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 animate-pulse border border-indigo-500/30",
       label: "Evaluating"
     },
     done: {
-      border: "border-emerald-500/30 hover:border-emerald-500/50",
-      bg: "bg-emerald-950/5 dark:bg-emerald-950/5 light:bg-emerald-50/30",
-      text: "text-emerald-400",
-      badge: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
+      border: "border-emerald-500/40 hover:border-emerald-500/60 shadow-[0_4px_10px_rgba(16,185,129,0.05)]",
+      bg: "bg-emerald-50/50 dark:bg-emerald-950/10",
+      text: "text-emerald-600 dark:text-emerald-400",
+      badge: "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30",
       label: "Complete"
     },
     error: {

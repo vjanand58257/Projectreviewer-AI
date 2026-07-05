@@ -216,11 +216,14 @@ export default function UploadPage() {
             onDragOver={handleDrag}
             onDragLeave={handleDrag}
             onDrop={handleDrop}
-            className={`w-full min-h-[260px] flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-2xl transition-all duration-300 ${dragActive
-              ? "border-violet-500 bg-violet-500/5 dark:bg-violet-950/10 shadow-lg shadow-violet-500/5"
-              : "border-slate-300 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-700 bg-slate-50/50 dark:bg-slate-900/30"
+            className={`w-full min-h-[300px] flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-3xl transition-all duration-500 relative overflow-hidden backdrop-blur-sm ${dragActive
+              ? "border-violet-500 bg-violet-500/10 dark:bg-violet-900/20 shadow-[0_0_30px_rgba(139,92,246,0.3)] scale-[1.02]"
+              : "border-slate-300 dark:border-slate-700 hover:border-violet-400 dark:hover:border-violet-600 bg-slate-50/50 dark:bg-slate-800/40 hover:bg-slate-100/50 dark:hover:bg-slate-800/60 shadow-inner"
               }`}
           >
+            {/* Ambient Background Gradient for Drop Zone */}
+            <div className={`absolute inset-0 bg-gradient-to-br from-violet-500/5 to-fuchsia-500/5 transition-opacity duration-500 pointer-events-none ${dragActive ? 'opacity-100' : 'opacity-0'}`} />
+
             {/* Input Element */}
             <input
               ref={fileInputRef}
@@ -232,23 +235,23 @@ export default function UploadPage() {
             />
 
             {/* Cloud Icon */}
-            <div className={`p-4 rounded-full border mb-4 transition-colors ${dragActive ? "bg-violet-500/15 border-violet-500/30 text-violet-650 dark:text-violet-400" : "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-450 dark:text-slate-400"
+            <div className={`p-5 rounded-full border mb-6 transition-all duration-500 z-10 ${dragActive ? "bg-violet-500/20 border-violet-500/40 text-violet-600 dark:text-violet-300 scale-110 shadow-[0_0_20px_rgba(139,92,246,0.4)]" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 shadow-sm"
               }`}>
-              <UploadIcon className="w-8 h-8" />
+              <UploadIcon className={`w-10 h-10 transition-transform duration-500 ${dragActive ? 'animate-bounce' : ''}`} />
             </div>
 
             {/* Text description */}
-            <div className="text-center space-y-1.5 mb-6">
-              <p className="font-semibold text-slate-800 dark:text-slate-200 text-base">
-                Drag and drop your project here
+            <div className="text-center space-y-2 mb-8 z-10">
+              <p className="font-extrabold text-slate-800 dark:text-slate-200 text-lg md:text-xl">
+                {dragActive ? "Drop to ignite evaluation!" : "Drag and drop your project here"}
               </p>
-              <p className="text-xs text-slate-450 dark:text-slate-500">
-                Supports folder zips up to 100MB
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                Supports folder <span className="bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded text-xs font-mono">.zip</span> up to 100MB
               </p>
             </div>
 
             {/* Selection Button */}
-            <Button variant="secondary" onClick={onButtonClick} disabled={isUploading}>
+            <Button variant="secondary" onClick={onButtonClick} disabled={isUploading} className="z-10 shadow-lg hover:shadow-xl transition-all duration-300">
               Browse Files
             </Button>
           </div>

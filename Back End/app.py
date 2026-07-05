@@ -24,13 +24,40 @@ def create_app():
     # Development & Testing:
     # Allows requests from localhost and Vercel.
     # Change this later to only your production domain if desired.
+    allowed_origins = app.config.get("ALLOWED_ORIGINS")
+    
+    print("====== CORS STARTUP INFO ======", flush=True)
+    print(f"Parsed ALLOWED_ORIGINS: {allowed_origins}", flush=True)
+    print("===============================", flush=True)
+
     CORS(
         app,
-        resources={r"/api/*": {"origins": app.config.get("ALLOWED_ORIGINS")}},
-        supports_credentials=True,
-        methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        allow_headers=["Content-Type", "Authorization"]
+        resources={
+            r"/*": {
+                "origins": allowed_origins,
+                "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+                "allow_headers": ["Content-Type", "Authorization", "Accept"],
+                "expose_headers": ["Content-Type", "Authorization", "Accept"],
+                "supports_credentials": True
+            }
+        }
     )
+
+    @app.after_request
+    def ensure_cors_headers(response):
+        """Fallback to ensure all responses (including 400/500/OPTIONS) have headers."""
+        from flask import request
+        origin = request.headers.get("Origin")
+        if origin and (origin in allowed_origins or "*" in allowed_origins):
+            if not response.headers.get("Access-Control-Allow-Origin"):
+                response.headers.add("Access-Control-Allow-Origin", origin)
+            if not response.headers.get("Access-Control-Allow-Headers"):
+                response.headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization, Accept")
+            if not response.headers.get("Access-Control-Allow-Methods"):
+                response.headers.add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+            if not response.headers.get("Access-Control-Allow-Credentials"):
+                response.headers.add("Access-Control-Allow-Credentials", "true")
+        return response
 
     # -------------------------------------------------------
     # Logging

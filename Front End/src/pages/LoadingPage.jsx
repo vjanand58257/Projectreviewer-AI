@@ -184,14 +184,14 @@ export default function LoadingPage() {
         </p>
 
         {/* Progress Bar */}
-        <div className="max-w-md mx-auto mt-4">
-          <div className="flex items-center justify-between text-xs text-slate-500 font-bold mb-1.5 uppercase tracking-wider">
+        <div className="max-w-md mx-auto mt-6">
+          <div className="flex items-center justify-between text-xs text-slate-500 font-extrabold mb-2 uppercase tracking-widest">
             <span>Overall Swarm Progress</span>
-            <span>{overallProgress}%</span>
+            <span className="text-violet-600 dark:text-violet-400">{overallProgress}%</span>
           </div>
-          <div className="w-full h-2.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+          <div className="w-full h-3 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden shadow-inner">
             <div
-              className="h-full bg-gradient-to-r from-violet-600 to-indigo-600 rounded-full transition-all duration-500 ease-out"
+              className="h-full bg-gradient-to-r from-violet-600 via-fuchsia-500 to-indigo-600 bg-[length:200%_200%] rounded-full transition-all duration-700 ease-out animate-gradient-x shadow-[0_0_10px_rgba(139,92,246,0.5)]"
               style={{ width: `${overallProgress}%` }}
             />
           </div>
