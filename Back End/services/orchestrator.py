@@ -36,26 +36,51 @@ class Orchestrator:
         
         def _run_agent(agent_name, agent_cls, context):
             STATUS_DB[project_id]["agents"][agent_name] = "in_progress"
+            class_name = agent_cls.__name__
+            logger.info(f"START {class_name}")
             try:
                 agent = agent_cls()
                 res = agent.run(context)
-                if res.get("errors") and len(res["errors"]) > 0:
+                
+                if not isinstance(res, dict):
+                    STATUS_DB[project_id]["agents"][agent_name] = "failed"
+                    logger.info(f"END {class_name}")
+                    return {
+                        "agent": class_name,
+                        "score": 0,
+                        "errors": [
+                            "Agent returned invalid response."
+                        ],
+                        "data": {}
+                    }
+
+                if res.get("errors") and len(res.get("errors", [])) > 0:
                     STATUS_DB[project_id]["agents"][agent_name] = "failed"
                 else:
                     STATUS_DB[project_id]["agents"][agent_name] = "done"
+                    
+                logger.info(f"END {class_name}")
                 return res
             except Exception as e:
-                logger.error(f"{agent_name} failed: {e}", exc_info=True)
+                logger.exception(
+                    "-------------------------------------------------\n"
+                    f"FAILED {class_name}\n"
+                    f"Exception Type: {type(e).__name__}\n"
+                    f"Exception Message: {str(e)}\n"
+                    "Full Traceback:\n"
+                    "-------------------------------------------------"
+                )
                 STATUS_DB[project_id]["agents"][agent_name] = "failed"
                 return {
-                    "agent": agent_name,
+                    "agent": class_name,
                     "score": 0,
-                    "data": {"highlights": [], "findings": [], "recommendations": []},
-                    "errors": [f"Exception: {str(e)}"]
+                    "errors": [
+                        f"{type(e).__name__}: {str(e)}"
+                    ],
+                    "data": {}
                 }
 
         # 1. Folder Agent
-        logger.info(f"Orchestrator: Running FolderAgent for {project_id}")
         f_res = _run_agent("folder", FolderAgent, {"project_root": str(project_root)})
         results["folder"] = f_res
         
@@ -87,18 +112,26 @@ class Orchestrator:
         ]
         
         for name, cls in tier_2:
-            logger.info(f"Orchestrator: Running {name} for {project_id}")
             results[name] = _run_agent(name, cls, common_context)
             
         # 3. Improvement Agent
-        logger.info(f"Orchestrator: Running improvement for {project_id}")
         imp_res = _run_agent("improvement", ImprovementAgent, {"previous_results": results})
         results["improvement"] = imp_res
         
         STATUS_DB[project_id]["status"] = "done"
         
-        # We use ImprovementAgent's score as the overall score, or a fallback weighted average
-        overall_score = imp_res.get("score", 0)
+        logger.info("All agents finished successfully.")
+        
+        overall_score = 0
+        if isinstance(imp_res, dict):
+            overall_score = imp_res.get("score", 0)
+            
+        if not isinstance(results, dict):
+            logger.error("Validation failed: results is not a dictionary.")
+        if not isinstance(imp_res, dict):
+            logger.error("Validation failed: improvement result is not a dictionary.")
+        if not isinstance(overall_score, (int, float)):
+            logger.error("Validation failed: overall_score is not numeric.")
         
         return {
             "success": True,

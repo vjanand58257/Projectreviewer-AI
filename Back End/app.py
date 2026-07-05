@@ -26,7 +26,7 @@ def create_app():
     # Change this later to only your production domain if desired.
     CORS(
         app,
-        resources={r"/api/*": {"origins": "*"}},
+        resources={r"/api/*": {"origins": app.config.get("ALLOWED_ORIGINS")}},
         supports_credentials=True,
         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         allow_headers=["Content-Type", "Authorization"]
