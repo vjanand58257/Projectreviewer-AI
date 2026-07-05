@@ -28,39 +28,38 @@ def allowed_file(filename):
 
 @upload_bp.route("/upload", methods=["POST"])
 def upload_project():
-    logger.info("========== Upload Started ==========")
-
-    if "file" not in request.files:
-        return jsonify({
-            "success": False,
-            "error": "No file found in request."
-        }), 400
-
-    file = request.files["file"]
-
-    if file.filename == "":
-        return jsonify({
-            "success": False,
-            "error": "No file selected."
-        }), 400
-
-    if not allowed_file(file.filename):
-        return jsonify({
-            "success": False,
-            "error": "Only .zip files are allowed."
-        }), 400
-
-    mime = file.content_type
-
-    logger.info(f"MIME Type : {mime}")
-
-    if mime not in ALLOWED_MIME_TYPES:
-        return jsonify({
-            "success": False,
-            "error": f"Invalid MIME type ({mime})"
-        }), 400
-
     try:
+        logger.info("========== Upload Started ==========")
+
+        if "file" not in request.files:
+            return jsonify({
+                "success": False,
+                "error": "No file found in request."
+            }), 400
+
+        file = request.files["file"]
+
+        if file.filename == "":
+            return jsonify({
+                "success": False,
+                "error": "No file selected."
+            }), 400
+
+        if not allowed_file(file.filename):
+            return jsonify({
+                "success": False,
+                "error": "Only .zip files are allowed."
+            }), 400
+
+        mime = file.content_type
+
+        logger.info(f"MIME Type : {mime}")
+
+        if mime not in ALLOWED_MIME_TYPES:
+            return jsonify({
+                "success": False,
+                "error": f"Invalid MIME type ({mime})"
+            }), 400
 
         ##################################################
         # Upload Folder
@@ -106,6 +105,7 @@ def upload_project():
         base_dir = Path(current_app.config["BASE_DIR"])
 
         extract_root = base_dir / "extracted" / project_id
+        extract_root.mkdir(parents=True, exist_ok=True)
 
         logger.info("Extracting ZIP...")
 
@@ -142,57 +142,37 @@ def upload_project():
         })
 
     except PermissionError as e:
-
-        logger.exception(e)
-
+        logger.exception("PermissionError during upload")
         try:
-            zip_path.unlink(missing_ok=True)
+            if 'zip_path' in locals():
+                zip_path.unlink(missing_ok=True)
         except:
             pass
-
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 422
+        return jsonify({"success": False, "error": f"Permission Error: {str(e)}"}), 500
 
     except (zipfile.BadZipFile, ValueError) as e:
-
-        logger.exception(e)
-
+        logger.exception("BadZipFile or ValueError during upload")
         try:
-            zip_path.unlink(missing_ok=True)
+            if 'zip_path' in locals():
+                zip_path.unlink(missing_ok=True)
         except:
             pass
+        return jsonify({"success": False, "error": "Invalid ZIP archive."}), 400
 
-        return jsonify({
-            "success": False,
-            "error": "Invalid ZIP archive."
-        }), 400
-
-    except MemoryError:
-
-        logger.exception("MemoryError")
-
+    except MemoryError as e:
+        logger.exception("MemoryError during upload")
         try:
-            zip_path.unlink(missing_ok=True)
+            if 'zip_path' in locals():
+                zip_path.unlink(missing_ok=True)
         except:
             pass
-
-        return jsonify({
-            "success": False,
-            "error": "Server ran out of memory while processing the ZIP. Please upload a smaller project."
-        }), 500
+        return jsonify({"success": False, "error": "Server ran out of memory."}), 500
 
     except Exception as e:
-
-        logger.exception(e)
-
+        logger.exception(f"Unhandled Exception in upload_project: {str(e)}")
         try:
-            zip_path.unlink(missing_ok=True)
+            if 'zip_path' in locals():
+                zip_path.unlink(missing_ok=True)
         except:
             pass
-
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
+        return jsonify({"success": False, "error": f"Internal Server Error: {str(e)}"}), 500

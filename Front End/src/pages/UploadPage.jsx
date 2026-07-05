@@ -192,16 +192,16 @@ export default function UploadPage() {
         <h2 className="text-3xl font-extrabold tracking-tight text-slate-800 dark:text-white">
           Upload Your Codebase
         </h2>
-        <p className="text-slate-500 dark:text-slate-400 mt-2">
+        <p className="text-gray-500 font-mono dark:text-slate-400 mt-2">
           Zip your project folder and drag it here to initiate agentic swarm evaluation.
         </p>
       </div>
 
       {/* Main Upload Area Wrapper */}
-      <div className="w-full bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 p-8 rounded-3xl shadow-md transition-colors duration-300">
+      <div className="w-full bg-white dark:bg-[#0a0a0a] border border-gray-300 dark:border-[#222222] dark:border-gray-300 dark:border-[#222222] p-8 rounded-none shadow-none transition-colors duration-300">
         {/* Error banner */}
         {error && (
-          <div className="mb-6 p-4 rounded-xl border border-rose-500/20 bg-rose-500/10 text-rose-650 dark:text-rose-450 text-sm flex items-center justify-between">
+          <div className="mb-6 p-4 rounded-none border border-rose-500/20 bg-rose-500/10 text-rose-650 dark:text-rose-450 text-sm flex items-center justify-between">
             <span className="font-medium">{error}</span>
             <button onClick={() => setError(null)} className="text-rose-450 hover:text-rose-650 cursor-pointer" disabled={isUploading}>
               <CloseIcon className="w-5 h-5" />
@@ -216,13 +216,13 @@ export default function UploadPage() {
             onDragOver={handleDrag}
             onDragLeave={handleDrag}
             onDrop={handleDrop}
-            className={`w-full min-h-[300px] flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-3xl transition-all duration-500 relative overflow-hidden backdrop-blur-sm ${dragActive
-              ? "border-violet-500 bg-violet-500/10 dark:bg-violet-900/20 shadow-[0_0_30px_rgba(139,92,246,0.3)] scale-[1.02]"
-              : "border-slate-300 dark:border-slate-700 hover:border-violet-400 dark:hover:border-violet-600 bg-slate-50/50 dark:bg-slate-800/40 hover:bg-slate-100/50 dark:hover:bg-slate-800/60 shadow-inner"
+            className={`w-full min-h-[300px] flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-none transition-all duration-500 relative overflow-hidden backdrop-blur-sm ${dragActive
+              ? "border-violet-500 bg-gray-100 dark:bg-[#111111]  scale-[1.02]"
+              : "border-gray-300 dark:border-[#222222] dark:border-gray-300 dark:border-[#222222] hover:border-violet-400 dark:hover:border-violet-600 bg-gray-100 dark:bg-[#111111]/50 dark:bg-gray-100 dark:bg-[#111111]/40 hover:bg-gray-100 dark:bg-[#111111]/50 dark:hover:bg-gray-100 dark:bg-[#111111]/60 shadow-inner"
               }`}
           >
             {/* Ambient Background Gradient for Drop Zone */}
-            <div className={`absolute inset-0 bg-gradient-to-br from-violet-500/5 to-fuchsia-500/5 transition-opacity duration-500 pointer-events-none ${dragActive ? 'opacity-100' : 'opacity-0'}`} />
+            <div className={`absolute inset-0 bg-gray-100 dark:bg-[#111111] border-2 border-gray-300 dark:border-[#222222] transition-opacity duration-500 pointer-events-none ${dragActive ? 'opacity-100' : 'opacity-0'}`} />
 
             {/* Input Element */}
             <input
@@ -235,7 +235,7 @@ export default function UploadPage() {
             />
 
             {/* Cloud Icon */}
-            <div className={`p-5 rounded-full border mb-6 transition-all duration-500 z-10 ${dragActive ? "bg-violet-500/20 border-violet-500/40 text-violet-600 dark:text-violet-300 scale-110 shadow-[0_0_20px_rgba(139,92,246,0.4)]" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 shadow-sm"
+            <div className={`p-5 rounded-none border mb-6 transition-all duration-500 z-10 ${dragActive ? "bg-gray-100 dark:bg-[#111111] border-violet-500/40 text-blue-600 dark:text-[#00f0ff] font-mono scale-110 " : "bg-white dark:bg-gray-100 dark:bg-[#111111] border-gray-300 dark:border-[#222222] dark:border-gray-300 dark:border-[#222222] text-slate-400 dark:text-gray-500 font-mono shadow-none"
               }`}>
               <UploadIcon className={`w-10 h-10 transition-transform duration-500 ${dragActive ? 'animate-bounce' : ''}`} />
             </div>
@@ -245,23 +245,23 @@ export default function UploadPage() {
               <p className="font-extrabold text-slate-800 dark:text-slate-200 text-lg md:text-xl">
                 {dragActive ? "Drop to ignite evaluation!" : "Drag and drop your project here"}
               </p>
-              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                Supports folder <span className="bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded text-xs font-mono">.zip</span> up to 100MB
+              <p className="text-sm font-medium text-gray-500 font-mono dark:text-slate-400">
+                Supports folder <span className="bg-gray-100 dark:bg-[#111111] dark:bg-gray-100 dark:bg-[#111111] px-1.5 py-0.5 rounded text-xs font-mono">.zip</span> up to 100MB
               </p>
             </div>
 
             {/* Selection Button */}
-            <Button variant="secondary" onClick={onButtonClick} disabled={isUploading} className="z-10 shadow-lg hover:shadow-xl transition-all duration-300">
+            <Button variant="secondary" onClick={onButtonClick} disabled={isUploading} className="z-10 shadow-none hover:shadow-none transition-all duration-300">
               Browse Files
             </Button>
           </div>
         ) : (
           /* File Preview State */
           <div className="w-full flex flex-col gap-6">
-            <div className="flex items-center justify-between p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30">
+            <div className="flex items-center justify-between p-5 rounded-none border border-gray-300 dark:border-[#222222] dark:border-gray-300 dark:border-[#222222] bg-gray-100 dark:bg-[#111111]/50 dark:bg-[#0a0a0a]">
               <div className="flex items-center gap-4">
                 {/* Zip icon placeholder */}
-                <div className="p-3.5 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-600 dark:text-violet-400 shrink-0">
+                <div className="p-3.5 rounded-none bg-gray-100 dark:bg-[#111111] border border-violet-500/20 text-blue-600 dark:text-[#00f0ff] font-mono shrink-0">
                   <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                   </svg>
@@ -270,7 +270,7 @@ export default function UploadPage() {
                   <h4 className="font-bold text-slate-850 dark:text-slate-100 text-sm truncate">
                     {file.name}
                   </h4>
-                  <p className="text-xs text-slate-450 dark:text-slate-500 mt-0.5">
+                  <p className="text-xs text-slate-450 dark:text-gray-500 font-mono mt-0.5">
                     {formatBytes(file.size)}
                   </p>
                 </div>
@@ -279,7 +279,7 @@ export default function UploadPage() {
               {/* Remove button */}
               <button
                 onClick={removeFile}
-                className={`p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors cursor-pointer ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`p-2 rounded-none hover:bg-gray-100 dark:bg-[#111111] dark:hover:bg-gray-100 dark:bg-[#111111] text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors cursor-pointer ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
                 aria-label="Remove file"
                 disabled={isUploading}
               >
@@ -290,13 +290,13 @@ export default function UploadPage() {
             {/* Upload Progress Bar */}
             {isUploading && (
               <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs font-bold text-slate-500 dark:text-slate-400">
+                <div className="flex items-center justify-between text-xs font-bold text-gray-500 font-mono dark:text-slate-400">
                   <span>Uploading codebase...</span>
                   <span>{uploadProgress}%</span>
                 </div>
-                <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                <div className="w-full h-2 bg-gray-100 dark:bg-[#111111] dark:bg-gray-100 dark:bg-[#111111] rounded-none overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-violet-600 to-indigo-600 rounded-full transition-all duration-300 ease-out"
+                    className="h-full bg-gray-100 dark:bg-[#111111] border-2 border-gray-300 dark:border-[#222222] rounded-none transition-all duration-300 ease-out"
                     style={{ width: `${uploadProgress}%` }}
                   />
                 </div>

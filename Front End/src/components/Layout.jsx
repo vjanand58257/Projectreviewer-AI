@@ -4,7 +4,7 @@ import Footer from "./Footer";
 
 export default function Layout({ children }) {
   return (
-    <div className="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-300">
+    <div className="bg-gray-100 dark:bg-[#111111] dark:bg-gray-100 dark:bg-[#111111] text-slate-800 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-300">
       {/* Global Navbar */}
       <Navbar />
 

@@ -1,3 +1,70 @@
 @import "tailwindcss";
 
 @variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-brand-cyan: #00f0ff;
+  --color-brand-cyan-dim: rgba(0, 240, 255, 0.1);
+  --color-brand-amber: #ffb000;
+  --color-bg-dark: #0a0a0a;
+  --color-bg-panel: #111111;
+  --color-border-subtle: #222222;
+  --color-text-primary: #e0e0e0;
+  --color-text-secondary: #888888;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-sans: 'Inter', sans-serif;
+}
+
+@layer base {
+  body {
+    @apply font-sans bg-gray-50 text-gray-900 transition-colors duration-300;
+  }
+  
+  .dark body {
+    @apply bg-[var(--color-bg-dark)] text-[var(--color-text-primary)];
+    /* Technical Grid Background for Dark Mode */
+    background-image: 
+      linear-gradient(to right, #ffffff05 1px, transparent 1px),
+      linear-gradient(to bottom, #ffffff05 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-mono tracking-tight;
+  }
+}
+
+@layer components {
+  .tech-panel {
+    @apply bg-white border border-gray-200 shadow-sm rounded-none;
+  }
+  .dark .tech-panel {
+    @apply bg-[var(--color-bg-panel)] border-[var(--color-border-subtle)] shadow-none;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+  }
+
+  .tech-button {
+    @apply font-mono uppercase tracking-wider text-sm px-4 py-2 border-2 transition-all rounded-none;
+  }
+  
+  .tech-button-primary {
+    @apply border-blue-600 bg-blue-600 text-white hover:bg-blue-700 hover:border-blue-700;
+  }
+  .dark .tech-button-primary {
+    @apply border-[var(--color-brand-cyan)] bg-[var(--color-brand-cyan-dim)] text-[var(--color-brand-cyan)] hover:bg-[var(--color-brand-cyan)] hover:text-black shadow-[0_0_10px_var(--color-brand-cyan-dim)];
+  }
+
+  .tech-accent-text {
+    @apply font-mono text-blue-600;
+  }
+  .dark .tech-accent-text {
+    @apply text-[var(--color-brand-cyan)];
+  }
+
+  .tech-border {
+    @apply border-gray-300;
+  }
+  .dark .tech-border {
+    @apply border-[var(--color-border-subtle)];
+  }
+}

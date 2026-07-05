@@ -175,23 +175,23 @@ export default function LoadingPage() {
           Codebase Analysis in Progress
         </h2>
         {uploadedFilename && (
-          <p className="text-xs text-slate-500 dark:text-slate-400 font-mono bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full inline-block">
+          <p className="text-xs text-gray-500 font-mono dark:text-slate-400 font-mono bg-gray-100 dark:bg-[#111111] dark:bg-gray-100 dark:bg-[#111111] px-3 py-1 rounded-none inline-block">
             {uploadedFilename}
           </p>
         )}
-        <p className="text-sm font-semibold text-violet-650 dark:text-violet-400 min-h-6 transition-all duration-300">
+        <p className="text-sm font-semibold text-blue-600 dark:text-[#00f0ff] font-mono min-h-6 transition-all duration-300">
           {activeStage}
         </p>
 
         {/* Progress Bar */}
         <div className="max-w-md mx-auto mt-6">
-          <div className="flex items-center justify-between text-xs text-slate-500 font-extrabold mb-2 uppercase tracking-widest">
+          <div className="flex items-center justify-between text-xs text-gray-500 font-mono font-extrabold mb-2 uppercase tracking-widest">
             <span>Overall Swarm Progress</span>
-            <span className="text-violet-600 dark:text-violet-400">{overallProgress}%</span>
+            <span className="text-blue-600 dark:text-[#00f0ff] font-mono">{overallProgress}%</span>
           </div>
-          <div className="w-full h-3 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden shadow-inner">
+          <div className="w-full h-3 bg-gray-100 dark:bg-[#111111] dark:bg-gray-100 dark:bg-[#111111] rounded-none overflow-hidden shadow-inner">
             <div
-              className="h-full bg-gradient-to-r from-violet-600 via-fuchsia-500 to-indigo-600 bg-[length:200%_200%] rounded-full transition-all duration-700 ease-out animate-gradient-x shadow-[0_0_10px_rgba(139,92,246,0.5)]"
+              className="h-full bg-gray-100 dark:bg-[#111111] border-2 border-gray-300 dark:border-[#222222] bg-[length:200%_200%] rounded-none transition-all duration-700 ease-out animate-gradient-x "
               style={{ width: `${overallProgress}%` }}
             />
           </div>
@@ -200,7 +200,7 @@ export default function LoadingPage() {
 
       {/* Error banners */}
       {errorText && (
-        <div className="mb-6 p-4 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-400 text-sm space-y-3">
+        <div className="mb-6 p-4 rounded-none border border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-400 text-sm space-y-3">
           <p className="font-semibold">Orchestration Error</p>
           <p className="font-mono text-xs break-all">{errorText}</p>
           <Button variant="outline" onClick={() => navigate("/upload")} className="text-xs">
@@ -219,7 +219,7 @@ export default function LoadingPage() {
       {/* Bottom action */}
       <div className="flex justify-center">
         {overallProgress === 100 && (
-          <Button onClick={() => navigate("/dashboard")} className="shadow-lg shadow-violet-500/20">
+          <Button onClick={() => navigate("/dashboard")} className="shadow-none shadow-violet-500/20">
             View Dashboard
           </Button>
         )}

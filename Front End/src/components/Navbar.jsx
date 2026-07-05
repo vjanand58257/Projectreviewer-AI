@@ -23,19 +23,19 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b border-slate-200/85 dark:border-slate-800/85 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md transition-colors duration-300">
+    <nav className="sticky top-0 z-50 w-full border-b border-gray-300 dark:border-[#222222]/85 dark:border-gray-300 dark:border-[#222222]/85 bg-white dark:bg-gray-100 dark:bg-[#111111]/80 backdrop-blur-md transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo / Brand */}
           <div className="flex items-center">
             <Link to="/" className="flex items-center gap-2 group">
-              <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-violet-600 to-indigo-600 flex items-center justify-center shadow-md shadow-indigo-500/20 group-hover:scale-105 transition-transform duration-350">
+              <div className="h-9 w-9 rounded-none bg-gray-100 dark:bg-[#111111] border-2 border-gray-300 dark:border-[#222222] flex items-center justify-center shadow-none shadow-indigo-500/20 group-hover:scale-105 transition-transform duration-350">
                 <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 21L8.188 15.904L3 15L8.188 14.096L9 9L9.813 14.096L15 15L9.813 15.904Z" />
                 </svg>
               </div>
-              <span className="font-extrabold text-lg tracking-tight bg-gradient-to-r from-slate-900 to-slate-750 dark:from-white dark:to-slate-350 bg-clip-text text-transparent group-hover:opacity-95 transition-opacity">
-                ProjectReviewer <span className="text-violet-600 dark:text-violet-400">AI</span>
+              <span className="font-extrabold text-lg tracking-tight bg-gray-100 dark:bg-[#111111] border-2 border-gray-300 dark:border-[#222222] dark:from-white dark:to-slate-350 bg-clip-text text-transparent group-hover:opacity-95 transition-opacity">
+                ProjectReviewer <span className="text-blue-600 dark:text-[#00f0ff] font-mono">AI</span>
               </span>
             </Link>
           </div>
@@ -48,7 +48,7 @@ export default function Navbar() {
                 to={item.path}
                 className={`text-sm font-semibold transition-colors duration-200 ${
                   isActive(item.path)
-                    ? "text-violet-600 dark:text-violet-400"
+                    ? "text-blue-600 dark:text-[#00f0ff] font-mono"
                     : "text-slate-650 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
                 }`}
               >
@@ -62,7 +62,7 @@ export default function Navbar() {
             {/* Theme Toggle Button */}
             <button
               onClick={toggleTheme}
-              className="p-2.5 rounded-xl border border-slate-200 hover:border-slate-350 dark:border-slate-800 dark:hover:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-550 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-all cursor-pointer"
+              className="p-2.5 rounded-none border border-gray-300 dark:border-[#222222] hover:border-gray-300 dark:border-[#222222] dark:border-gray-300 dark:border-[#222222] dark:hover:border-gray-300 dark:border-[#222222] bg-gray-100 dark:bg-[#111111] dark:bg-gray-100 dark:bg-[#111111] text-slate-550 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-all cursor-pointer"
               aria-label="Toggle Theme"
             >
               {isDarkMode ? <SunIcon className="w-5 h-5" /> : <MoonIcon className="w-5 h-5" />}
@@ -78,7 +78,7 @@ export default function Navbar() {
             {/* Theme Toggle for Mobile */}
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-555 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-all cursor-pointer"
+              className="p-2 rounded-none border border-gray-300 dark:border-[#222222] dark:border-gray-300 dark:border-[#222222] bg-gray-100 dark:bg-[#111111] dark:bg-gray-100 dark:bg-[#111111] text-slate-555 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-all cursor-pointer"
               aria-label="Toggle Theme"
             >
               {isDarkMode ? <SunIcon className="w-5 h-5" /> : <MoonIcon className="w-5 h-5" />}
@@ -87,7 +87,7 @@ export default function Navbar() {
             {/* Hamburger Button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-850 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors cursor-pointer"
+              className="p-2 rounded-none border border-gray-300 dark:border-[#222222] dark:border-gray-300 dark:border-[#222222] text-slate-600 dark:text-slate-400 hover:text-slate-850 dark:hover:text-slate-200 hover:bg-gray-100 dark:bg-[#111111] dark:hover:bg-gray-100 dark:bg-[#111111] transition-colors cursor-pointer"
               aria-label="Open menu"
             >
               {isMobileMenuOpen ? (
@@ -104,16 +104,16 @@ export default function Navbar() {
 
       {/* Mobile Menu Dropdown */}
       {isMobileMenuOpen && (
-        <div className="md:hidden border-t border-slate-200 dark:border-slate-850 bg-white dark:bg-slate-950 px-4 pt-2 pb-4 space-y-2">
+        <div className="md:hidden border-t border-gray-300 dark:border-[#222222] dark:border-gray-300 dark:border-[#222222] bg-white dark:bg-gray-100 dark:bg-[#111111] px-4 pt-2 pb-4 space-y-2">
           {navItems.map((item) => (
             <Link
               key={item.path}
               to={item.path}
               onClick={() => setIsMobileMenuOpen(false)}
-              className={`block px-4 py-2.5 rounded-xl text-base font-semibold transition-colors ${
+              className={`block px-4 py-2.5 rounded-none text-base font-semibold transition-colors ${
                 isActive(item.path)
-                  ? "bg-violet-500/10 text-violet-600 dark:text-violet-400"
-                  : "text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-900"
+                  ? "bg-gray-100 dark:bg-[#111111] text-blue-600 dark:text-[#00f0ff] font-mono"
+                  : "text-slate-700 dark:text-slate-350 hover:bg-gray-100 dark:bg-[#111111] dark:hover:bg-gray-100 dark:bg-[#111111]"
               }`}
             >
               {item.label}

@@ -61,7 +61,7 @@ export default function DashboardPage() {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
         <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">No Review Loaded</h2>
-        <p className="text-slate-500 dark:text-slate-400">Please upload a project to see the dashboard.</p>
+        <p className="text-gray-500 font-mono dark:text-slate-400">Please upload a project to see the dashboard.</p>
         <Link to="/upload">
           <Button>Go to Upload</Button>
         </Link>
@@ -130,8 +130,8 @@ export default function DashboardPage() {
   });
 
   const getScoreColor = (score) => {
-    if (score >= 90) return "text-emerald-500 border-emerald-500/20 bg-emerald-500/5";
-    if (score >= 80) return "text-indigo-500 border-indigo-500/20 bg-indigo-500/5";
+    if (score >= 90) return "text-blue-600 dark:text-[#00f0ff] font-mono border-emerald-500/20 bg-gray-100 dark:bg-[#111111]";
+    if (score >= 80) return "text-blue-600 dark:text-[#00f0ff] font-mono border-indigo-500/20 bg-gray-100 dark:bg-[#111111]";
     if (score >= 70) return "text-amber-500 border-amber-500/20 bg-amber-500/5";
     return "text-rose-500 border-rose-500/20 bg-rose-500/5";
   };
@@ -146,7 +146,7 @@ export default function DashboardPage() {
             <h2 className="text-3xl font-extrabold tracking-tight text-slate-800 dark:text-white">
               Evaluation Report
             </h2>
-            <p className="text-slate-500 dark:text-slate-400 mt-1">
+            <p className="text-gray-500 font-mono dark:text-slate-400 mt-1">
               Swarm analysis for <span className="font-semibold text-slate-700 dark:text-slate-355">{displayMeta.projectName}</span>
             </p>
           </div>
@@ -160,22 +160,22 @@ export default function DashboardPage() {
         </div>
 
         {/* Main Stats: Overall Score Header */}
-        <div className="w-full bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-sm transition-colors duration-300">
+        <div className="w-full bg-white dark:bg-[#0a0a0a] border border-gray-300 dark:border-[#222222] dark:border-gray-300 dark:border-[#222222] rounded-none p-6 sm:p-8 shadow-none transition-colors duration-300">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
             {/* Big Score Card */}
-            <div className="flex flex-col sm:flex-row items-center gap-8 lg:border-r lg:border-slate-200 dark:lg:border-slate-800 lg:pr-10 relative">
+            <div className="flex flex-col sm:flex-row items-center gap-8 lg:border-r lg:border-gray-300 dark:border-[#222222] dark:lg:border-gray-300 dark:border-[#222222] lg:pr-10 relative">
               
               {/* Background ambient glow behind the gauge */}
-              <div className={`absolute top-1/2 left-6 -translate-y-1/2 w-32 h-32 blur-[50px] rounded-full pointer-events-none -z-10 ${
-                displayScore >= 90 ? "bg-emerald-500/30" :
-                displayScore >= 80 ? "bg-indigo-500/30" :
+              <div className={`absolute top-1/2 left-6 -translate-y-1/2 w-32 h-32 hidden rounded-none pointer-events-none -z-10 ${
+                displayScore >= 90 ? "bg-gray-100 dark:bg-[#111111]" :
+                displayScore >= 80 ? "bg-gray-100 dark:bg-[#111111]" :
                 displayScore >= 70 ? "bg-amber-500/30" :
                 "bg-rose-500/30"
               }`} />
 
               {/* Circular Progress Gauge */}
-              <div className="relative w-44 h-44 shrink-0 flex items-center justify-center drop-shadow-xl hover:scale-105 transition-transform duration-500">
-                <svg className="w-full h-full transform -rotate-95 drop-shadow-[0_0_8px_rgba(139,92,246,0.5)]" viewBox="0 0 100 100">
+              <div className="relative w-44 h-44 shrink-0 flex items-center justify-center drop-shadow-none hover:scale-105 transition-transform duration-500">
+                <svg className="w-full h-full transform -rotate-95 drop-" viewBox="0 0 100 100">
                   {/* Background Ring */}
                   <circle
                     className="text-slate-100 dark:text-slate-800/80"
@@ -189,8 +189,8 @@ export default function DashboardPage() {
                   {/* Foreground Progress */}
                   <circle
                     className={`${
-                      displayScore >= 90 ? "text-emerald-500" :
-                      displayScore >= 80 ? "text-indigo-500" :
+                      displayScore >= 90 ? "text-blue-600 dark:text-[#00f0ff] font-mono" :
+                      displayScore >= 80 ? "text-blue-600 dark:text-[#00f0ff] font-mono" :
                       displayScore >= 70 ? "text-amber-500" :
                       "text-rose-500"
                     } transition-all duration-1000 ease-out`}
@@ -207,10 +207,10 @@ export default function DashboardPage() {
                 </svg>
                 {/* Inner score */}
                 <div className="absolute flex flex-col items-center justify-center">
-                  <span className="text-5xl font-black text-slate-900 dark:text-white tracking-tighter drop-shadow-sm">
+                  <span className="text-5xl font-black text-slate-900 dark:text-white tracking-tighter drop-shadow-none">
                     {displayScore}
                   </span>
-                  <span className="text-slate-400 dark:text-slate-500 font-extrabold text-xs block uppercase tracking-widest mt-1">
+                  <span className="text-slate-400 dark:text-gray-500 font-mono font-extrabold text-xs block uppercase tracking-widest mt-1">
                     / 100
                   </span>
                 </div>
@@ -218,13 +218,13 @@ export default function DashboardPage() {
 
               {/* Score Meta details */}
               <div className="text-center sm:text-left space-y-2 z-10">
-                <span className={`inline-flex px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest border shadow-sm ${getScoreColor(displayScore)}`}>
+                <span className={`inline-flex px-4 py-1.5 rounded-none text-xs font-black uppercase tracking-widest border shadow-none ${getScoreColor(displayScore)}`}>
                   Grade: {displayGrade}
                 </span>
                 <h3 className="text-xl font-extrabold text-slate-855 dark:text-slate-100 mt-2">
                   Overall Code Health
                 </h3>
-                <p className="text-xs text-slate-450 dark:text-slate-500 font-semibold">
+                <p className="text-xs text-slate-450 dark:text-gray-500 font-mono font-semibold">
                   Analyzed on {displayMeta.analyzedAt}
                 </p>
               </div>
@@ -233,7 +233,7 @@ export default function DashboardPage() {
             {/* Evaluation Narrative */}
             <div className="lg:col-span-2 space-y-6">
               <div>
-                <h4 className="text-xs font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider mb-2">
+                <h4 className="text-xs font-bold text-slate-450 dark:text-gray-500 font-mono uppercase tracking-wider mb-2">
                   Executive Summary
                 </h4>
                 <p className="text-sm sm:text-base text-slate-650 dark:text-slate-350 leading-relaxed font-medium">
@@ -242,7 +242,7 @@ export default function DashboardPage() {
               </div>
 
               {/* Micro Metadata Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-slate-100 dark:border-slate-850/60">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-gray-300 dark:border-[#222222] dark:border-gray-300 dark:border-[#222222]/60">
                 <div className="space-y-0.5">
                   <span className="text-[10px] font-bold text-slate-400 dark:text-slate-550 uppercase tracking-wide">Language</span>
                   <span className="text-sm font-bold text-slate-755 dark:text-slate-200 block">{displayMeta.language}</span>
@@ -266,39 +266,39 @@ export default function DashboardPage() {
 
         {/* Agents Section: Filters & Grid */}
         <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-850 pb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-300 dark:border-[#222222] dark:border-gray-300 dark:border-[#222222] pb-4">
             <h3 className="text-xl font-bold text-slate-800 dark:text-white">
               Specialized Agent Analysis ({filteredAgents.length})
             </h3>
 
             {/* Filter Toggles */}
-            <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-905 p-1 rounded-xl border border-slate-200/50 dark:border-slate-800">
+            <div className="flex items-center gap-1 bg-gray-100 dark:bg-[#111111] dark:bg-gray-100 dark:bg-[#111111] p-1 rounded-none border border-gray-300 dark:border-[#222222]/50 dark:border-gray-300 dark:border-[#222222]">
               <button
                 onClick={() => setFilter("all")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-none text-xs font-bold transition-all cursor-pointer ${
                   filter === "all"
-                    ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm"
-                    : "text-slate-500 hover:text-slate-750 dark:text-slate-450 dark:hover:text-slate-355"
+                    ? "bg-white dark:bg-gray-100 dark:bg-[#111111] text-slate-900 dark:text-white shadow-none"
+                    : "text-gray-500 font-mono hover:text-slate-750 dark:text-slate-450 dark:hover:text-slate-355"
                 }`}
               >
                 All Agents
               </button>
               <button
                 onClick={() => setFilter("high")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-none text-xs font-bold transition-all cursor-pointer ${
                   filter === "high"
-                    ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm"
-                    : "text-slate-500 hover:text-slate-750 dark:text-slate-450 dark:hover:text-slate-355"
+                    ? "bg-white dark:bg-gray-100 dark:bg-[#111111] text-slate-900 dark:text-white shadow-none"
+                    : "text-gray-500 font-mono hover:text-slate-750 dark:text-slate-450 dark:hover:text-slate-355"
                 }`}
               >
                 High Scores (&ge;85)
               </button>
               <button
                 onClick={() => setFilter("low")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-none text-xs font-bold transition-all cursor-pointer ${
                   filter === "low"
-                    ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm"
-                    : "text-slate-500 hover:text-slate-750 dark:text-slate-450 dark:hover:text-slate-355"
+                    ? "bg-white dark:bg-gray-100 dark:bg-[#111111] text-slate-900 dark:text-white shadow-none"
+                    : "text-gray-500 font-mono hover:text-slate-750 dark:text-slate-450 dark:hover:text-slate-355"
                 }`}
               >
                 Areas to Improve (&lt;85)
@@ -314,8 +314,8 @@ export default function DashboardPage() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-12 border border-dashed border-slate-300 dark:border-slate-850 rounded-2xl">
-              <p className="text-slate-500 dark:text-slate-455 font-medium">
+            <div className="text-center py-12 border border-dashed border-gray-300 dark:border-[#222222] dark:border-gray-300 dark:border-[#222222] rounded-none">
+              <p className="text-gray-500 font-mono dark:text-slate-455 font-medium">
                 No agents matching this filter.
               </p>
             </div>
@@ -323,9 +323,9 @@ export default function DashboardPage() {
         </div>
 
         {/* Prioritized Improvements / Recommendations */}
-        <div className="bg-gradient-to-br from-violet-500/5 to-indigo-500/5 dark:from-violet-900/10 dark:to-indigo-900/10 border border-violet-500/20 dark:border-violet-500/30 rounded-3xl p-6 sm:p-8 shadow-lg transition-colors duration-300 mt-12 relative overflow-hidden backdrop-blur-md">
+        <div className="bg-gray-100 dark:bg-[#111111] border-2 border-gray-300 dark:border-[#222222] dark:from-violet-900/10 dark:to-indigo-900/10 border border-violet-500/20 dark:border-violet-500/30 rounded-none p-6 sm:p-8 shadow-none transition-colors duration-300 mt-12 relative overflow-hidden backdrop-blur-md">
           {/* Subtle Background Glow */}
-          <div className="absolute -top-24 -right-24 w-64 h-64 bg-violet-500/20 dark:bg-violet-500/10 blur-[80px] rounded-full pointer-events-none -z-10" />
+          <div className="absolute -top-24 -right-24 w-64 h-64 bg-gray-100 dark:bg-[#111111] hidden rounded-none pointer-events-none -z-10" />
 
           <h3 className="text-2xl font-extrabold text-slate-800 dark:text-white mb-6">
             Prioritized Action Plan
@@ -333,8 +333,8 @@ export default function DashboardPage() {
           {activeReview.results?.improvement?.data?.recommendations?.length > 0 ? (
             <ul className="space-y-4">
               {activeReview.results.improvement.data.recommendations.map((rec, idx) => (
-                <li key={idx} className="group text-sm text-slate-700 dark:text-slate-200 font-medium bg-white/60 dark:bg-slate-900/50 p-5 rounded-2xl border border-slate-200 dark:border-slate-700/60 flex items-start gap-4 transition-all duration-300 hover:shadow-md hover:border-violet-500/30 hover:-translate-y-0.5">
-                  <span className="flex items-center justify-center w-8 h-8 rounded-full bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-400 shrink-0 mt-0.5 group-hover:scale-110 group-hover:bg-violet-500 group-hover:text-white transition-all duration-300 shadow-sm">
+                <li key={idx} className="group text-sm text-slate-700 dark:text-slate-200 font-medium bg-white dark:bg-[#0a0a0a] p-5 rounded-none border border-gray-300 dark:border-[#222222] dark:border-gray-300 dark:border-[#222222]/60 flex items-start gap-4 transition-all duration-300 hover:shadow-none hover:border-violet-500/30 hover:-translate-y-0.5">
+                  <span className="flex items-center justify-center w-8 h-8 rounded-none bg-violet-100 dark:bg-gray-100 dark:bg-[#111111] text-blue-600 dark:text-[#00f0ff] font-mono shrink-0 mt-0.5 group-hover:scale-110 group-hover:bg-violet-500 group-hover:text-white transition-all duration-300 shadow-none">
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
@@ -344,24 +344,24 @@ export default function DashboardPage() {
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-slate-500 dark:text-slate-400">No specific recommendations provided by the Improvement Agent.</p>
+            <p className="text-sm text-gray-500 font-mono dark:text-slate-400">No specific recommendations provided by the Improvement Agent.</p>
           )}
         </div>
       </div>
 
       {/* Right Column - Review History Panel */}
       <div className="lg:col-span-1 space-y-6">
-        <div className="bg-white dark:bg-slate-905 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm transition-colors duration-300">
+        <div className="bg-white dark:bg-gray-100 dark:bg-[#111111] border border-gray-300 dark:border-[#222222] dark:border-gray-300 dark:border-[#222222] rounded-none p-5 shadow-none transition-colors duration-300">
           <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4">
             Recent Swarm Reports
           </h3>
           
           {isLoadingHistory ? (
             <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-violet-500"></div>
+              <div className="animate-spin rounded-none h-6 w-6 border-b-2 border-violet-500"></div>
             </div>
           ) : historyList.length === 0 ? (
-            <div className="text-center py-8 text-slate-450 dark:text-slate-500 text-xs font-semibold">
+            <div className="text-center py-8 text-slate-450 dark:text-gray-500 font-mono text-xs font-semibold">
               No recent reports found.
             </div>
           ) : (
@@ -372,26 +372,26 @@ export default function DashboardPage() {
                   <button
                     key={item.analysis_id}
                     onClick={() => handleLoadReport(item.analysis_id)}
-                    className={`w-full text-left p-3 rounded-2xl border transition-all flex flex-col gap-1.5 cursor-pointer ${
+                    className={`w-full text-left p-3 rounded-none border transition-all flex flex-col gap-1.5 cursor-pointer ${
                       isActive
-                        ? "border-violet-500/50 bg-violet-500/5 dark:bg-violet-950/10 shadow-sm"
-                        : "border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 hover:border-slate-300 dark:hover:border-slate-700"
+                        ? "border-violet-500/50 bg-gray-100 dark:bg-[#111111] shadow-none"
+                        : "border-gray-300 dark:border-[#222222] dark:border-gray-300 dark:border-[#222222] bg-gray-100 dark:bg-[#111111]/50 dark:bg-[#0a0a0a] hover:border-gray-300 dark:border-[#222222] dark:hover:border-gray-300 dark:border-[#222222]"
                     }`}
                   >
                     <div className="flex justify-between items-start gap-2 w-full">
                       <span className="font-bold text-slate-800 dark:text-slate-200 text-xs truncate max-w-[130px]">
                         {item.project_name || item.project_id}
                       </span>
-                      <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-black shrink-0 ${
-                        item.overall_score >= 90 ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" :
-                        item.overall_score >= 80 ? "bg-indigo-500/10 text-indigo-650 dark:text-indigo-400" :
+                      <span className={`px-1.5 py-0.5 rounded-none text-[10px] font-black shrink-0 ${
+                        item.overall_score >= 90 ? "bg-gray-100 dark:bg-[#111111] text-blue-600 dark:text-[#00f0ff] font-mono" :
+                        item.overall_score >= 80 ? "bg-gray-100 dark:bg-[#111111] text-blue-600 dark:text-[#00f0ff] font-mono" :
                         item.overall_score >= 70 ? "bg-amber-500/10 text-amber-600 dark:text-amber-450" :
                         "bg-rose-500/10 text-rose-650 dark:text-rose-450"
                       }`}>
                         {item.overall_score}/100
                       </span>
                     </div>
-                    <div className="flex justify-between items-center text-[10px] text-slate-400 dark:text-slate-500 font-semibold w-full">
+                    <div className="flex justify-between items-center text-[10px] text-slate-400 dark:text-gray-500 font-mono font-semibold w-full">
                       <span>{formatAnalyzedAt(item.created_at)}</span>
                       <span className="capitalize">{item.status.replace("_", " ")}</span>
                     </div>
