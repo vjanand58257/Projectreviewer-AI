@@ -1,4 +1,5 @@
 import React, { useState, useRef } from "react";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { uploadProject } from "../services/api";
 import Button from "../components/Button";
@@ -10,7 +11,7 @@ export default function UploadPage() {
   const [error, setError] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
-  const fileInputRef = useRef(null);
+  const abortController = useRef(null);
   const navigate = useNavigate();
 
   const handleDrag = (e) => {
@@ -36,11 +37,11 @@ export default function UploadPage() {
     }
 
     // Check if the file is a zip archive
-    const isZip = selectedFile.name.endsWith(".zip") || 
-                  selectedFile.type === "application/zip" || 
-                  selectedFile.type === "application/x-zip-compressed" ||
-                  selectedFile.type === "application/x-zip";
-    
+    const isZip = selectedFile.name.endsWith(".zip") ||
+      selectedFile.type === "application/zip" ||
+      selectedFile.type === "application/x-zip-compressed" ||
+      selectedFile.type === "application/x-zip";
+
     if (!isZip) {
       setError("Please upload a valid .zip file containing your codebase.");
       setFile(null);
@@ -73,49 +74,84 @@ export default function UploadPage() {
   };
 
   const removeFile = () => {
-    if (isUploading) return;
+
+    // Cancel current upload if it is running
+    if (abortController.current) {
+      abortController.current.abort();
+      abortController.current = null;
+    }
+
     setFile(null);
     setError(null);
     setUploadProgress(0);
+    setIsUploading(false);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const startAnalysis = async () => {
     if (!file || isUploading) return;
-    
+
     setError(null);
     setIsUploading(true);
-    setUploadProgress(0);
-    
+    abortController.current = new AbortController();
+
     const formData = new FormData();
     formData.append("file", file);
-    
+
     try {
       logger_log("Uploading zip archive to API...");
-      
+
       const formDataToSend = new FormData();
       formDataToSend.append("file", file);
-      
+
       // We manually construct axios config for upload to track progress, but using the API instance
-      const response = await uploadProject(formDataToSend);
-      
+      const response = await uploadProject(
+        formDataToSend,
+        {
+          signal: abortController.current.signal,
+          onUploadProgress: (progressEvent) => {
+            if (progressEvent.total) {
+              const percent = Math.round(
+                (progressEvent.loaded * 100) /
+                progressEvent.total
+              );
+              setUploadProgress(percent);
+            }
+          }
+        }
+      );
+
       const { data } = response;
       if (data.success) {
         // Redirect to loading simulation and pass project_id + metadata
-        navigate("/loading", { 
-          state: { 
-            projectId: data.project_id, 
+        navigate("/loading", {
+          state: {
+            projectId: data.project_id,
             filename: data.filename,
             size: data.size
-          } 
+          }
         });
       } else {
         setError(data.error || "An unknown error occurred during upload.");
         setIsUploading(false);
       }
     } catch (err) {
+
+      setIsUploading(false);
+
+      if (
+        err.name === "CanceledError" ||
+        axios.isCancel?.(err)
+      ) {
+        setError("Upload cancelled.");
+        return;
+      }
       console.error("Upload error:", err);
       setIsUploading(false);
-      
+
       if (err.response && err.response.data && err.response.data.error) {
         setError(err.response.data.error);
       } else if (err.message) {
@@ -171,11 +207,10 @@ export default function UploadPage() {
             onDragOver={handleDrag}
             onDragLeave={handleDrag}
             onDrop={handleDrop}
-            className={`w-full min-h-[260px] flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-2xl transition-all duration-300 ${
-              dragActive
-                ? "border-violet-500 bg-violet-500/5 dark:bg-violet-950/10 shadow-lg shadow-violet-500/5"
-                : "border-slate-300 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-700 bg-slate-50/50 dark:bg-slate-900/30"
-            }`}
+            className={`w-full min-h-[260px] flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-2xl transition-all duration-300 ${dragActive
+              ? "border-violet-500 bg-violet-500/5 dark:bg-violet-950/10 shadow-lg shadow-violet-500/5"
+              : "border-slate-300 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-700 bg-slate-50/50 dark:bg-slate-900/30"
+              }`}
           >
             {/* Input Element */}
             <input
@@ -188,9 +223,8 @@ export default function UploadPage() {
             />
 
             {/* Cloud Icon */}
-            <div className={`p-4 rounded-full border mb-4 transition-colors ${
-              dragActive ? "bg-violet-500/15 border-violet-500/30 text-violet-650 dark:text-violet-400" : "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-450 dark:text-slate-400"
-            }`}>
+            <div className={`p-4 rounded-full border mb-4 transition-colors ${dragActive ? "bg-violet-500/15 border-violet-500/30 text-violet-650 dark:text-violet-400" : "bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-450 dark:text-slate-400"
+              }`}>
               <UploadIcon className="w-8 h-8" />
             </div>
 
@@ -249,7 +283,7 @@ export default function UploadPage() {
                   <span>{uploadProgress}%</span>
                 </div>
                 <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                  <div 
+                  <div
                     className="h-full bg-gradient-to-r from-violet-600 to-indigo-600 rounded-full transition-all duration-300 ease-out"
                     style={{ width: `${uploadProgress}%` }}
                   />
@@ -262,7 +296,11 @@ export default function UploadPage() {
               <Button onClick={startAnalysis} className="w-full sm:flex-1 animate-pulse" disabled={isUploading}>
                 {isUploading ? `Uploading ${uploadProgress}%` : "Analyze Codebase"}
               </Button>
-              <Button variant="secondary" onClick={removeFile} className="w-full sm:w-auto" disabled={isUploading}>
+              <Button
+                variant="secondary"
+                onClick={removeFile}
+                className="w-full sm:w-auto"
+              >
                 Cancel
               </Button>
             </div>
