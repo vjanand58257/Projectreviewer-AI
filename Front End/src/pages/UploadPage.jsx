@@ -109,6 +109,9 @@ export default function UploadPage() {
       const formDataToSend = new FormData();
       formDataToSend.append("file", file);
 
+      console.log("Uploading...");
+      console.log(formDataToSend);
+
       // We manually construct axios config for upload to track progress, but using the API instance
       const response = await uploadProject(
         formDataToSend,
@@ -151,6 +154,10 @@ export default function UploadPage() {
         setError("Upload cancelled.");
         return;
       }
+      console.log(err);
+      console.log(err.response);
+      console.log(err.request);
+      console.log(err.config);
       console.error("Upload error:", err);
       setIsUploading(false);
 
