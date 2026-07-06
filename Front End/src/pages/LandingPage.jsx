@@ -1,329 +1,552 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   Upload, Code2, Cpu, Shield, Layout, MessageSquare, 
   Settings, FolderTree, FileText, Lightbulb, CheckCircle, 
-  ChevronRight, Star, Moon, Sun, ArrowRight, Play, Server, Zap
+  ChevronRight, Star, ArrowRight, Zap, Play, Terminal
 } from "lucide-react";
 
-const ThemeToggle = () => {
-  const [isDark, setIsDark] = useState(true);
-  
+// Interactive Canvas Particle Background
+const ParticleBackground = () => {
+  const canvasRef = useRef(null);
+  const mouseRef = useRef({ x: null, y: null, radius: 150 });
+
   useEffect(() => {
-    document.documentElement.classList.add('dark');
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    let animationFrameId;
+
+    const resizeCanvas = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas);
+
+    // Particles array
+    const particles = [];
+    const particleCount = 80;
+
+    class Particle {
+      constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.size = Math.random() * 2 + 0.5;
+        this.speedX = Math.random() * 0.4 - 0.2;
+        this.speedY = Math.random() * 0.4 - 0.2;
+        this.color = Math.random() > 0.5 ? "rgba(0, 229, 255, 0.4)" : "rgba(168, 85, 247, 0.3)";
+      }
+
+      update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+
+        // Bounce on edges
+        if (this.x > canvas.width || this.x < 0) this.speedX = -this.speedX;
+        if (this.y > canvas.height || this.y < 0) this.speedY = -this.speedY;
+
+        // Mouse interaction
+        const dx = mouseRef.current.x - this.x;
+        const dy = mouseRef.current.y - this.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance < mouseRef.current.radius) {
+          const forceDirectionX = dx / distance;
+          const forceDirectionY = dy / distance;
+          const force = (mouseRef.current.radius - distance) / mouseRef.current.radius;
+          const directionX = forceDirectionX * force * 0.6;
+          const directionY = forceDirectionY * force * 0.6;
+          this.x -= directionX;
+          this.y -= directionY;
+        }
+      }
+
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = this.color;
+        ctx.fill();
+        ctx.shadowBlur = 0; // reset
+      }
+    }
+
+    // Initialize particles
+    for (let i = 0; i < particleCount; i++) {
+      particles.push(new Particle());
+    }
+
+    const handleMouseMove = (e) => {
+      mouseRef.current.x = e.clientX;
+      mouseRef.current.y = e.clientY;
+    };
+
+    const handleMouseLeave = () => {
+      mouseRef.current.x = null;
+      mouseRef.current.y = null;
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseleave", handleMouseLeave);
+
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Draw grid in canvas for depth
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.015)";
+      ctx.lineWidth = 1;
+      const gridSize = 60;
+      for (let x = 0; x < canvas.width; x += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        ctx.stroke();
+      }
+      for (let y = 0; y < canvas.height; y += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
+      }
+
+      particles.forEach((particle) => {
+        particle.update();
+        particle.draw();
+      });
+
+      // Connect close particles with fine lines
+      for (let a = 0; a < particles.length; a++) {
+        for (let b = a + 1; b < particles.length; b++) {
+          const dx = particles[a].x - particles[b].x;
+          const dy = particles[a].y - particles[b].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 100) {
+            ctx.beginPath();
+            ctx.moveTo(particles[a].x, particles[a].y);
+            ctx.lineTo(particles[b].x, particles[b].y);
+            ctx.strokeStyle = `rgba(0, 229, 255, ${0.15 * (1 - dist / 100)})`;
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
+        }
+      }
+
+      animationFrameId = requestAnimationFrame(animate);
+    };
+    animate();
+
+    return () => {
+      window.removeEventListener("resize", resizeCanvas);
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseleave", handleMouseLeave);
+      cancelAnimationFrame(animationFrameId);
+    };
   }, []);
 
-  const toggle = () => {
-    setIsDark(!isDark);
-    document.documentElement.classList.toggle('dark');
-  };
-
-  return (
-    <button onClick={toggle} className="p-2 rounded-full glass-panel hover:bg-white/20 transition-all text-white">
-      {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-    </button>
-  );
+  return <canvas ref={canvasRef} className="fixed inset-0 pointer-events-none -z-20 bg-transparent" />;
 };
 
+// Smooth Counter Animation Component
+function AnimatedCounter({ value, duration = 1500, suffix = "" }) {
+  const [count, setCount] = useState(0);
+  const elementRef = useRef(null);
+  const [hasStarted, setHasStarted] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setHasStarted(true);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (elementRef.current) {
+      observer.observe(elementRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!hasStarted) return;
+    let start = 0;
+    const target = parseFloat(value.replace(/,/g, "").replace(/\+/g, ""));
+    const startTime = performance.now();
+
+    const updateCount = (timestamp) => {
+      const elapsed = timestamp - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const easeProgress = progress * (2 - progress); // easeOutQuad
+      const current = start + easeProgress * (target - start);
+      setCount(current);
+
+      if (progress < 1) {
+        requestAnimationFrame(updateCount);
+      } else {
+        setCount(target);
+      }
+    };
+
+    requestAnimationFrame(updateCount);
+  }, [value, duration, hasStarted]);
+
+  return (
+    <span ref={elementRef} className="font-space">
+      {Math.round(count).toLocaleString()}
+      {suffix}
+    </span>
+  );
+}
+
 const AGENTS = [
-  { name: "Folder Analyzer", icon: FolderTree, color: "#00e5ff", angle: 0 },
-  { name: "Docs Reviewer", icon: FileText, color: "#00ffff", angle: 45 },
-  { name: "Innovation Scorer", icon: Lightbulb, color: "#b026ff", angle: 90 },
-  { name: "Bug Finder", icon: CheckCircle, color: "#ff007f", angle: 135 },
-  { name: "Security Checker", icon: Shield, color: "#4b00ff", angle: 180 },
-  { name: "Presentation", icon: Layout, color: "#00e5ff", angle: 225 },
-  { name: "Interview Gen", icon: MessageSquare, color: "#b026ff", angle: 270 },
-  { name: "Improvement", icon: Settings, color: "#00ffff", angle: 315 },
+  { name: "Folder Analyzer", icon: FolderTree, color: "#0066ff", angle: 0, desc: "Scans project architecture, checks layout modularity and clean folder structures." },
+  { name: "Documentation", icon: FileText, color: "#00e5ff", angle: 45, desc: "Evaluates readme files, inline docstrings, API specifications, and comments." },
+  { name: "Innovation", icon: Lightbulb, color: "#a855f7", angle: 90, desc: "Scores engineering creativity, optimizations, and modern frameworks usage." },
+  { name: "Bug Finder", icon: CheckCircle, color: "#f43f5e", angle: 135, desc: "Finds logic anomalies, missing validations, uncaught promises, and crashes." },
+  { name: "Security Checker", icon: Shield, color: "#10b981", angle: 180, desc: "Scans for credentials leaks, dependency flaws, and common CVEs." },
+  { name: "Presentation", icon: Layout, color: "#00e5ff", angle: 225, desc: "Reviews accessibility ratings, layout compliance, and visual details." },
+  { name: "Interview Gen", icon: MessageSquare, color: "#a855f7", angle: 270, desc: "Creates mock-interview questions custom tailored to codebase decisions." },
+  { name: "Improvement", icon: Settings, color: "#f43f5e", angle: 315, desc: "Delivers direct refactoring steps, roadmaps, and optimization tasks." }
 ];
 
 export default function LandingPage() {
-  const { scrollY } = useScroll();
-  const navBackground = useTransform(scrollY, [0, 100], ["rgba(255,255,255,0)", "rgba(5,8,20,0.8)"]);
-  const navBlur = useTransform(scrollY, [0, 100], ["blur(0px)", "blur(20px)"]);
+  const [hoveredAgent, setHoveredAgent] = useState(null);
+  const [rotationDegree, setRotationDegree] = useState(0);
+
+  // Auto rotate the orbit core slowly
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setRotationDegree((prev) => (prev + 0.1) % 360);
+    }, 30);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
-    <div className="min-h-screen bg-[#050814] text-white overflow-x-hidden selection:bg-[#b026ff]/30 relative">
+    <div className="relative min-h-screen text-slate-100 flex flex-col justify-start">
       
-      {/* Background Nebulas */}
-      <div className="fixed inset-0 pointer-events-none -z-10">
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-[#4b00ff] opacity-10 blur-[150px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-[#00e5ff] opacity-10 blur-[150px]" />
-        <div className="absolute top-[40%] left-[60%] w-[40%] h-[40%] rounded-full bg-[#b026ff] opacity-10 blur-[150px]" />
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 animate-pulse" />
+      {/* Interactive canvas background */}
+      <ParticleBackground />
+
+      {/* Floating Light Beams */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
+        <div className="absolute top-[20%] left-[20%] w-[1px] h-[400px] bg-gradient-to-b from-transparent via-[#00e5ff]/20 to-transparent blur-[1px] transform -rotate-45" />
+        <div className="absolute top-[30%] right-[30%] w-[1px] h-[500px] bg-gradient-to-b from-transparent via-[#a855f7]/15 to-transparent blur-[2px] transform -rotate-45" />
       </div>
 
-      {/* Navbar */}
-      <motion.nav 
-        style={{ background: navBackground, backdropFilter: navBlur }}
-        className="fixed top-0 left-0 right-0 z-50 border-b border-white/5 transition-colors"
-      >
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-[12px] bg-gradient-to-br from-[#4b00ff] to-[#00e5ff] flex items-center justify-center shadow-[0_0_20px_#4b00ff66]">
-              <Cpu className="w-6 h-6 text-white" />
-            </div>
-            <span className="font-space font-bold text-xl tracking-tight">ProjectReviewer AI</span>
-          </div>
-          
-          <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
-            <a href="#" className="hover:text-white transition-colors">Home</a>
-            <a href="#how-it-works" className="hover:text-white transition-colors">How it Works</a>
-            <a href="#agents" className="hover:text-white transition-colors">Agents</a>
-            <a href="#" className="hover:text-white transition-colors">Docs</a>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <ThemeToggle />
-            <Link to="/upload">
-              <button className="relative group px-6 py-2.5 rounded-full overflow-hidden font-medium text-sm">
-                <div className="absolute inset-0 bg-gradient-to-r from-[#00e5ff] via-[#b026ff] to-[#ff007f] opacity-80 group-hover:opacity-100 transition-opacity" />
-                <div className="absolute inset-[1px] bg-[#050814] rounded-full transition-colors group-hover:bg-transparent" />
-                <span className="relative z-10 group-hover:text-white transition-colors">Get Started</span>
-              </button>
-            </Link>
-          </div>
-        </div>
-      </motion.nav>
-
       {/* Hero Section */}
-      <section className="relative pt-40 pb-32 px-6 overflow-hidden">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+      <section className="relative pt-12 pb-24 px-4 overflow-hidden">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
           
-          {/* Left Text */}
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-          >
-            <h1 className="text-6xl sm:text-7xl lg:text-8xl font-space font-extrabold leading-[1.1] tracking-tighter mb-6">
-              AI-Powered Insights.<br />
-              Expert-Level Results.<br />
-              <span className="text-gradient from-[#00e5ff] via-[#b026ff] to-[#ff007f] block pb-2">
-                Better Projects.
+          {/* Left Text details */}
+          <div className="lg:col-span-6 space-y-8 text-left z-10">
+            {/* Header pill */}
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#00e5ff]/35 bg-[#00e5ff]/5 text-[#00e5ff] text-[10px] uppercase font-bold tracking-widest font-mono shadow-[0_0_15px_rgba(0,229,255,0.1)]">
+              <Cpu className="w-3.5 h-3.5 animate-spin-slow" />
+              <span>Next-Gen Swarm Orchestrator</span>
+            </div>
+
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-space font-extrabold leading-[1.05] tracking-tighter">
+              ProjectReviewer <span className="text-gradient from-[#0066ff] via-[#00e5ff] to-[#a855f7] text-glow-cyan">AI</span>
+              <span className="block text-xl sm:text-2xl font-medium tracking-wide text-slate-400 font-sans mt-4 max-w-lg leading-relaxed">
+                The AI Operating System for Software Project Evaluation
               </span>
             </h1>
-            
-            <p className="text-xl text-slate-400 mb-10 max-w-lg leading-relaxed">
-              Upload your codebase and instantly deploy a swarm of 8 highly specialized Gemini AI agents. Experience an operating system built for absolute code perfection.
+
+            <p className="text-sm sm:text-base text-slate-400 max-w-lg leading-relaxed">
+              Upload your codebase, zip-extracted, and trigger a parallel swarm of 8 highly specialized Gemini AI agents. Review quality grades, vulnerabilities, and roadmap plans in real time.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-5">
+            {/* Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 pt-4">
               <Link to="/upload">
-                <button className="h-14 px-8 rounded-full bg-white text-[#050814] font-bold flex items-center justify-center gap-2 hover:scale-105 hover:shadow-[0_0_30px_#ffffff66] transition-all">
-                  <Upload className="w-5 h-5" />
-                  Upload Your Project
+                <button className="h-12 px-6 rounded-xl bg-gradient-to-r from-[#0066ff] via-[#00e5ff] to-[#a855f7] text-white font-bold font-mono text-xs tracking-wider uppercase flex items-center justify-center gap-2 hover:shadow-[0_0_25px_rgba(0,229,255,0.4)] transition-all active:scale-95 duration-300 w-full sm:w-auto cursor-pointer">
+                  <Upload className="w-4 h-4" />
+                  Upload Project
                 </button>
               </Link>
               <Link to="/dashboard">
-                <button className="h-14 px-8 rounded-full glass-panel font-bold flex items-center justify-center gap-2 hover:bg-white/10 hover:shadow-[0_0_30px_#00e5ff33] transition-all border border-[#00e5ff]/30 text-[#00e5ff]">
-                  <Layout className="w-5 h-5" />
+                <button className="h-12 px-6 rounded-xl bg-white/5 border border-white/10 hover:border-[#00e5ff]/30 text-[#00e5ff] font-bold font-mono text-xs tracking-wider uppercase flex items-center justify-center gap-2 hover:bg-[#00e5ff]/5 hover:shadow-[0_0_20px_rgba(0,229,255,0.1)] transition-all active:scale-95 duration-300 w-full sm:w-auto cursor-pointer">
+                  <Layout className="w-4 h-4" />
                   See Dashboard
                 </button>
               </Link>
             </div>
 
-            {/* Badges */}
-            <div className="mt-14 flex flex-wrap gap-4">
-              {['Lightning Fast', 'Bank-Grade Security', 'Deep Analysis'].map((text, i) => (
-                <div key={i} className="glass-panel px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest text-slate-300 flex items-center gap-2 hover:text-white hover:border-[#b026ff]/50 hover:shadow-[0_0_15px_#b026ff33] transition-all cursor-default">
-                  <Star className="w-3.5 h-3.5 text-[#00e5ff]" />
-                  {text}
+            {/* Badges / Micro indicators */}
+            <div className="pt-4 flex flex-wrap gap-3">
+              {["React v19 Support", "Gemini Ultra", "Full Visual twin"].map((badge, idx) => (
+                <div key={idx} className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/5 border border-white/5 text-[10px] font-mono text-slate-400 uppercase tracking-widest">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#00e5ff]" />
+                  {badge}
                 </div>
               ))}
             </div>
-          </motion.div>
+          </div>
 
-          {/* Right Holographic Core */}
-          <div className="relative h-[600px] flex items-center justify-center">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(75,0,255,0.1)_0%,transparent_70%)] animate-pulse" />
-            
-            {/* Center Cube */}
+          {/* Right Holographic AI Core & Orbiting Swarm */}
+          <div className="lg:col-span-6 h-[550px] relative flex items-center justify-center z-10 mt-8 lg:mt-0">
+            {/* Center Gradient glow */}
+            <div className="absolute w-[300px] h-[300px] rounded-full bg-gradient-to-tr from-[#0066ff]/10 to-[#a855f7]/10 blur-[60px] pointer-events-none" />
+
+            {/* Outer dotted rings */}
+            <div className="absolute w-[440px] h-[440px] border border-white/5 rounded-full z-0 pointer-events-none" />
+            <div className="absolute w-[440px] h-[440px] border border-dashed border-[#00e5ff]/15 rounded-full z-0 animate-spin-slow pointer-events-none" />
+            <div className="absolute w-[320px] h-[320px] border border-dashed border-[#a855f7]/10 rounded-full z-0 animate-spin-reverse-slow pointer-events-none" />
+
+            {/* Glowing lines connecting Agents to Core */}
+            <svg className="absolute inset-0 w-full h-full pointer-events-none z-0">
+              <defs>
+                <linearGradient id="cyanPurple" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#00e5ff" stopOpacity="0.8" />
+                  <stop offset="100%" stopColor="#a855f7" stopOpacity="0.2" />
+                </linearGradient>
+              </defs>
+              {AGENTS.map((agent, i) => {
+                const total = AGENTS.length;
+                const angleRad = ((i * (360 / total) + rotationDegree) * Math.PI) / 180;
+                
+                // Orbit radius is 200px
+                const radius = 190;
+                const startX = 275; // center x (out of 550)
+                const startY = 275; // center y
+                const endX = startX + radius * Math.cos(angleRad);
+                const endY = startY + radius * Math.sin(angleRad);
+                
+                const isHovered = hoveredAgent === agent.name;
+
+                return (
+                  <g key={i}>
+                    {/* Basic link line */}
+                    <line 
+                      x1={startX} 
+                      y1={startY} 
+                      x2={endX} 
+                      y2={endY} 
+                      stroke={isHovered ? agent.color : "rgba(255, 255, 255, 0.05)"}
+                      strokeWidth={isHovered ? 2 : 1}
+                      transition="stroke 0.3s"
+                    />
+                    {/* Animated Flow pulses */}
+                    <circle
+                      cx={startX + (endX - startX) * 0.5}
+                      cy={startY + (endY - startY) * 0.5}
+                      r={isHovered ? 3 : 1.5}
+                      fill={agent.color}
+                      className="animate-pulse"
+                      style={{
+                        animation: "float 2s ease-in-out infinite",
+                        animationDelay: `${i * 0.25}s`
+                      }}
+                    />
+                  </g>
+                );
+              })}
+            </svg>
+
+            {/* Central Holographic AI Core */}
             <motion.div 
-              animate={{ rotateY: 360, rotateX: 180 }}
-              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-              className="relative w-32 h-32 glass-panel shadow-[0_0_50px_#b026ff66] flex items-center justify-center border-[#00e5ff]/50 z-20"
+              className="relative w-36 h-36 rounded-3xl glass-panel-glow flex flex-col items-center justify-center border-[#00e5ff]/30 shadow-[0_0_60px_rgba(0,229,255,0.15)] z-20 cursor-pointer overflow-hidden group"
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.3 }}
             >
-              <Code2 className="w-16 h-16 text-[#00e5ff]" />
+              {/* Inner animated core grid */}
+              <div className="absolute inset-0 bg-grid-pattern opacity-30 animate-pulse-slow" />
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0066ff]/10 to-transparent pointer-events-none" />
+              
+              <AnimatePresence mode="wait">
+                {hoveredAgent ? (
+                  <motion.div 
+                    key="hovered" 
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    className="text-center p-3 space-y-1 relative z-10"
+                  >
+                    <span className="text-[10px] font-mono text-[#00e5ff] uppercase font-bold tracking-widest">Active Agent</span>
+                    <h4 className="text-xs font-bold font-space text-white truncate max-w-[120px]">{hoveredAgent}</h4>
+                  </motion.div>
+                ) : (
+                  <motion.div 
+                    key="idle" 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="flex flex-col items-center justify-center space-y-1 relative z-10"
+                  >
+                    <Cpu className="w-10 h-10 text-[#00e5ff] animate-pulse" />
+                    <span className="text-[10px] font-mono text-slate-400 font-bold uppercase tracking-widest mt-1">AI CORE</span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
 
-            {/* Orbiting Agents */}
-            <div className="absolute inset-0">
+            {/* Orbiting Agent Cards */}
+            <div className="absolute inset-0 w-full h-full pointer-events-none">
               {AGENTS.map((agent, i) => {
-                const radius = 220; // 220px orbit radius
+                const total = AGENTS.length;
+                const angleRad = ((i * (360 / total) + rotationDegree) * Math.PI) / 180;
+                const radius = 190;
+                
+                // Calculate position relative to container center
+                const x = 275 + radius * Math.cos(angleRad) - 26; // minus half size of node (52px)
+                const y = 275 + radius * Math.sin(angleRad) - 26;
+
                 return (
-                  <motion.div 
+                  <div
                     key={i}
-                    className="orbit-container"
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 40, repeat: Infinity, ease: "linear", delay: i * -5 }}
+                    className="absolute pointer-events-auto"
+                    style={{ left: `${x}px`, top: `${y}px` }}
+                    onMouseEnter={() => setHoveredAgent(agent.name)}
+                    onMouseLeave={() => setHoveredAgent(null)}
                   >
-                    <div 
-                      className="absolute group"
-                      style={{ transform: `translateX(${radius}px)` }}
+                    <motion.div 
+                      className={`w-14 h-14 rounded-2xl glass-panel flex items-center justify-center cursor-pointer transition-all duration-300 relative group border-white/10 hover:scale-115`}
+                      style={{ 
+                        boxShadow: hoveredAgent === agent.name ? `0 0 25px ${agent.color}55` : "0 4px 20px rgba(0,0,0,0.3)",
+                        borderColor: hoveredAgent === agent.name ? agent.color : "rgba(255,255,255,0.08)"
+                      }}
                     >
-                      <motion.div 
-                        animate={{ rotate: -360 }}
-                        transition={{ duration: 40, repeat: Infinity, ease: "linear", delay: i * -5 }}
-                        className="glass-panel w-14 h-14 rounded-[16px] flex items-center justify-center cursor-pointer transition-all hover:scale-125"
-                        style={{ borderColor: `${agent.color}40`, boxShadow: `0 0 20px ${agent.color}33` }}
-                      >
-                        <agent.icon className="w-6 h-6" style={{ color: agent.color }} />
-                        
-                        {/* Tooltip */}
-                        <div className="absolute -top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap bg-black/80 px-3 py-1 rounded-full text-xs font-bold border border-white/10 text-white">
-                          {agent.name}
-                        </div>
-                      </motion.div>
-                    </div>
-                  </motion.div>
+                      <agent.icon className="w-5 h-5 transition-transform duration-300 group-hover:scale-110" style={{ color: agent.color }} />
+                      
+                      {/* Floating mini description when hovered */}
+                      <div className="absolute bottom-[-45px] left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none bg-[#040408] border border-white/10 px-3 py-1 rounded-lg text-[9px] font-mono text-slate-300 whitespace-nowrap z-50 shadow-md">
+                        {agent.name}
+                      </div>
+                    </motion.div>
+                  </div>
                 );
               })}
             </div>
-            
-            {/* Orbit Rings */}
-            <div className="absolute w-[440px] h-[440px] border border-white/5 rounded-full z-0" />
-            <div className="absolute w-[440px] h-[440px] border border-[#b026ff]/10 rounded-full z-0 border-dashed animate-[spin_60s_linear_infinite]" />
           </div>
-
         </div>
       </section>
 
-      {/* How it Works Section */}
-      <section id="how-it-works" className="py-32 relative z-10">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-20">
-            <h2 className="text-4xl md:text-5xl font-space font-bold mb-6">How It Works</h2>
-            <p className="text-slate-400 max-w-2xl mx-auto text-lg">A seamless workflow designed to transform messy repositories into architectural masterpieces in minutes.</p>
+      {/* Stats Counter Section */}
+      <section className="py-12 border-y border-white/5 bg-white/[0.01]">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8">
+          {[
+            { label: "Projects Reviewed", value: "14092", suffix: "+", color: "#0066ff" },
+            { label: "Lines of Code Analyzed", value: "4200000", suffix: "+", color: "#00e5ff" },
+            { label: "Active AI Agents", value: "8", suffix: "", color: "#a855f7" },
+            { label: "Security Faults Found", value: "89431", suffix: "+", color: "#f43f5e" }
+          ].map((stat, i) => (
+            <div key={i} className="text-center space-y-1 relative">
+              {i < 3 && <div className="hidden md:block absolute right-0 top-1/2 -translate-y-1/2 h-10 w-[1px] bg-white/5" />}
+              <h3 className="text-3xl sm:text-4xl font-space font-black text-white" style={{ color: stat.color }}>
+                <AnimatedCounter value={stat.value} suffix={stat.suffix} />
+              </h3>
+              <p className="text-xs font-mono font-bold text-slate-400 uppercase tracking-widest">{stat.label}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* How it Works / Dynamic Steps */}
+      <section id="how-it-works" className="py-24 relative">
+        <div className="max-w-7xl mx-auto px-6 space-y-16">
+          <div className="text-center space-y-4 max-w-2xl mx-auto">
+            <h2 className="text-3xl sm:text-4xl font-space font-bold text-white tracking-tight">Evaluation Process</h2>
+            <p className="text-sm text-slate-400 leading-relaxed font-mono">
+              The codebase traverses a pipeline of security validation, architectural linting, and quality review.
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 relative">
-            {/* Connector Line */}
-            <div className="hidden md:block absolute top-1/2 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-[#00e5ff]/30 to-transparent -translate-y-1/2 z-0" />
+            {/* Connector Line in background */}
+            <div className="hidden md:block absolute top-1/2 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-y-1/2 z-0" />
 
             {[
-              { title: "Upload", desc: "Drag & Drop .zip", icon: Upload, color: "#00e5ff" },
-              { title: "AI Analysis", desc: "Swarm reads code", icon: Server, color: "#b026ff" },
-              { title: "Insights", desc: "Generate report", icon: Zap, color: "#ff007f" },
-              { title: "Improve", desc: "Apply feedback", icon: Code2, color: "#4b00ff" }
+              { title: "Code Upload", desc: "Drag your .zip codebase directly into the secure upload terminal.", icon: Upload, color: "#0066ff" },
+              { title: "Extraction & Lint", desc: "Vetted sandbox unpacks structure, reading readme, tests, config.", icon: Terminal, color: "#00e5ff" },
+              { title: "Swarm Execution", desc: "8 specialized AI agents analyze aspects concurrently.", icon: Cpu, color: "#a855f7" },
+              { title: "Digital Twin & Report", desc: "Examine execution timeline, charts, and action roadmaps.", icon: Layout, color: "#f43f5e" }
             ].map((step, i) => (
               <motion.div 
                 key={i}
-                initial={{ opacity: 0, y: 50 }}
+                initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: i * 0.1 }}
-                className="relative z-10 glass-panel p-8 flex flex-col items-center text-center group hover:-translate-y-4 transition-transform duration-500"
-                style={{ '--tw-shadow-color': `${step.color}22`, boxShadow: '0 20px 40px var(--tw-shadow-color)' }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+                className="relative z-10 glass-panel p-6 flex flex-col items-start text-left group hover:border-[#00e5ff]/20 transition-all duration-300"
               >
-                <div className="w-16 h-16 rounded-[18px] flex items-center justify-center mb-6 transition-all duration-500 group-hover:scale-110 group-hover:rotate-6" style={{ background: `${step.color}15`, border: `1px solid ${step.color}40` }}>
-                  <step.icon className="w-8 h-8" style={{ color: step.color }} />
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-6 transition-all duration-300 group-hover:scale-105" style={{ background: `${step.color}10`, border: `1px solid ${step.color}30` }}>
+                  <step.icon className="w-6 h-6" style={{ color: step.color }} />
                 </div>
-                <h3 className="text-xl font-bold mb-2">{step.title}</h3>
-                <p className="text-slate-400 text-sm">{step.desc}</p>
+                <h3 className="text-base font-bold text-white font-space mb-2">{step.title}</h3>
+                <p className="text-xs text-slate-400 leading-relaxed">{step.desc}</p>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Live Analysis Showcase */}
-      <section className="py-32 relative overflow-hidden">
+      {/* Swarm Console & Timeline Showcase */}
+      <section className="py-20 relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
           
-          {/* Left Feed */}
-          <motion.div 
-            initial={{ opacity: 0, x: -50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            className="lg:col-span-4 glass-panel p-6 h-[400px] overflow-hidden relative flex flex-col justify-end"
-          >
-            <div className="absolute inset-0 bg-gradient-to-t from-[#050814]/80 to-transparent z-10" />
-            <div className="space-y-4 relative z-0 animate-float">
-              {['Scanning architecture...', 'Analyzing README...', 'Running Security Scan...', 'Generating Interview Questions...', 'Review Complete'].map((msg, i) => (
-                <div key={i} className="flex items-center gap-3 text-sm text-slate-300 bg-white/5 px-4 py-3 rounded-[12px] border border-white/10">
-                  <div className="w-2 h-2 rounded-full bg-[#00e5ff] animate-pulse" />
-                  <span className="font-mono">{msg}</span>
+          {/* Left Console */}
+          <div className="lg:col-span-5 glass-panel p-5 h-[320px] overflow-hidden relative flex flex-col justify-end border-white/5">
+            {/* Ambient terminal top bar */}
+            <div className="absolute top-0 inset-x-0 h-8 bg-white/5 flex items-center px-4 justify-between border-b border-white/5">
+              <div className="flex gap-1.5">
+                <div className="w-2.5 h-2.5 rounded-full bg-rose-500/80" />
+                <div className="w-2.5 h-2.5 rounded-full bg-amber-500/80" />
+                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/80" />
+              </div>
+              <span className="text-[10px] font-mono text-slate-500">live_activity.log</span>
+            </div>
+
+            <div className="absolute inset-0 bg-gradient-to-t from-[#020205] via-transparent to-transparent z-10 pointer-events-none" />
+            
+            <div className="space-y-3 pb-2 z-0 animate-float font-mono text-[11px]">
+              {[
+                "Initializing agent swarm pipelines...",
+                "Running Folder & Structure check...",
+                "Bug Finder discovered 2 Async warnings.",
+                "Innovation Agent calculated 95% rating.",
+                "Security Agent validated API endpoints.",
+                "Synthesizing final executive summary..."
+              ].map((msg, i) => (
+                <div key={i} className="flex items-center gap-2.5 text-slate-400 bg-white/[0.02] px-3.5 py-2.5 rounded-lg border border-white/5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#00e5ff]" />
+                  <span>{msg}</span>
                 </div>
               ))}
             </div>
-          </motion.div>
+          </div>
 
-          {/* Center Progress */}
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            className="lg:col-span-4 flex items-center justify-center relative h-[400px]"
-          >
-            <div className="absolute w-72 h-72 border border-[#b026ff]/20 rounded-full animate-[spin_10s_linear_infinite]" />
-            <div className="absolute w-64 h-64 border-4 border-dashed border-[#00e5ff]/40 rounded-full animate-[spin_20s_linear_infinite_reverse]" />
-            <div className="w-56 h-56 glass-panel rounded-full flex flex-col items-center justify-center relative z-10 shadow-[0_0_80px_#4b00ff44]">
-              <span className="text-slate-400 text-sm font-bold uppercase tracking-widest mb-2">Progress</span>
-              <span className="text-6xl font-space font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-white to-[#00e5ff]">76%</span>
+          {/* Right Progress */}
+          <div className="lg:col-span-3 flex flex-col items-center justify-center relative h-[320px]">
+            <div className="absolute w-60 h-60 border border-white/5 rounded-full animate-spin-slow pointer-events-none" />
+            <div className="absolute w-52 h-52 border border-dashed border-[#00e5ff]/20 rounded-full animate-spin-reverse-slow pointer-events-none" />
+            
+            <div className="w-44 h-44 glass-panel rounded-full flex flex-col items-center justify-center relative z-10 shadow-[0_0_40px_rgba(0,229,255,0.06)] border-[#00e5ff]/20">
+              <span className="text-slate-500 text-[10px] font-mono uppercase tracking-widest mb-1">Health Score</span>
+              <span className="text-4xl font-space font-black text-white">84%</span>
+              <span className="text-[#00e5ff] text-[9px] font-mono uppercase mt-1 tracking-widest font-bold">Good</span>
             </div>
-          </motion.div>
+          </div>
 
-          {/* Right Stats */}
-          <motion.div 
-            initial={{ opacity: 0, x: 50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            className="lg:col-span-4 space-y-4"
-          >
-            {[
-              { label: 'Projects Reviewed', val: '14,092', color: '#00e5ff' },
-              { label: 'Lines of Code', val: '4.2M+', color: '#b026ff' },
-              { label: 'Bugs Found', val: '89,431', color: '#ff007f' }
-            ].map((stat, i) => (
-              <div key={i} className="glass-panel p-6 border-l-4" style={{ borderLeftColor: stat.color }}>
-                <div className="text-4xl font-space font-bold mb-1" style={{ color: stat.color }}>{stat.val}</div>
-                <div className="text-sm font-bold text-slate-400 uppercase tracking-wider">{stat.label}</div>
-              </div>
-            ))}
-          </motion.div>
+          {/* Detailed explanation */}
+          <div className="lg:col-span-4 text-left space-y-6">
+            <h3 className="text-2xl font-space font-bold text-white tracking-tight">Swarm Mission Control</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Every agent records telemetry, highlighting architecture errors, documentation deficits, performance bottlenecks, and security gaps. See live progress loops as evaluations take place.
+            </p>
+            <Link to="/upload">
+              <button className="px-5 py-2.5 rounded-xl border border-white/10 hover:border-[#00e5ff]/30 text-white font-mono font-bold text-xs tracking-wider uppercase hover:bg-white/5 transition-all flex items-center gap-2 cursor-pointer">
+                Launch Evaluation Swarm
+                <ArrowRight className="w-4 h-4 text-[#00e5ff]" />
+              </button>
+            </Link>
+          </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="relative pt-32 pb-10 border-t border-white/10 overflow-hidden">
-        <div className="absolute bottom-0 left-0 right-0 h-64 bg-gradient-to-t from-[#4b00ff]/20 to-transparent pointer-events-none" />
-        <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-12 mb-16">
-            <div>
-              <div className="flex items-center gap-3 mb-6">
-                <Cpu className="w-6 h-6 text-[#00e5ff]" />
-                <span className="font-space font-bold text-lg">ProjectReviewer AI</span>
-              </div>
-              <p className="text-slate-400 text-sm">The world's most advanced holographic code review engine.</p>
-            </div>
-            <div>
-              <h4 className="font-bold mb-6 text-white uppercase tracking-widest text-xs">Product</h4>
-              <ul className="space-y-3 text-sm text-slate-400">
-                <li><a href="#" className="hover:text-[#00e5ff]">Agents</a></li>
-                <li><a href="#" className="hover:text-[#00e5ff]">Dashboard</a></li>
-                <li><a href="#" className="hover:text-[#00e5ff]">Pricing</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-bold mb-6 text-white uppercase tracking-widest text-xs">Resources</h4>
-              <ul className="space-y-3 text-sm text-slate-400">
-                <li><a href="#" className="hover:text-[#b026ff]">Documentation</a></li>
-                <li><a href="#" className="hover:text-[#b026ff]">API</a></li>
-                <li><a href="#" className="hover:text-[#b026ff]">Blog</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-bold mb-6 text-white uppercase tracking-widest text-xs">Company</h4>
-              <ul className="space-y-3 text-sm text-slate-400">
-                <li><a href="#" className="hover:text-[#ff007f]">About</a></li>
-                <li><a href="#" className="hover:text-[#ff007f]">Careers</a></li>
-                <li><a href="#" className="hover:text-[#ff007f]">Contact</a></li>
-              </ul>
-            </div>
-          </div>
-          <div className="text-center text-sm text-slate-500 pt-8 border-t border-white/10">
-            © 2026 ProjectReviewer AI. All rights reserved.
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

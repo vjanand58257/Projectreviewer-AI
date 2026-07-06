@@ -11,25 +11,25 @@ export default function Button({
   ...props
 }) {
   const baseStyles =
-    "inline-flex items-center justify-center font-mono font-bold uppercase tracking-widest rounded-none border-2 transition-all duration-300 focus:outline-none focus:ring-0 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none cursor-pointer";
+    "inline-flex items-center justify-center font-mono font-bold uppercase tracking-wider rounded-xl transition-all duration-300 focus:outline-none focus:ring-1 focus:ring-[#00e5ff]/50 active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none cursor-pointer border border-transparent";
 
   const variants = {
     primary:
-      "border-blue-600 bg-blue-600 text-white hover:bg-blue-700 hover:border-blue-700 dark:border-[var(--color-brand-cyan)] dark:bg-[var(--color-brand-cyan-dim)] dark:text-[var(--color-brand-cyan)] dark:hover:bg-[var(--color-brand-cyan)] dark:hover:text-black ",
+      "bg-gradient-to-r from-[#0066ff] via-[#00e5ff] to-[#a855f7] text-white hover:shadow-[0_0_20px_rgba(0,229,255,0.3)] hover:opacity-95",
     secondary:
-      "border-gray-300 bg-gray-100 text-gray-800 hover:bg-gray-200 dark:border-[var(--color-border-subtle)] dark:bg-[var(--color-bg-panel)] dark:text-[var(--color-text-primary)] dark:hover:bg-[#1a1a1a] dark:hover:border-gray-600",
+      "bg-white/5 border-white/10 hover:border-white/20 text-slate-200 hover:bg-white/10 hover:text-white shadow-sm",
     outline:
-      "border-blue-600 bg-transparent text-blue-600 hover:bg-blue-50 dark:border-[var(--color-brand-cyan)] dark:text-[var(--color-brand-cyan)] dark:hover:bg-[var(--color-brand-cyan-dim)]",
+      "border-[#00e5ff]/40 bg-transparent text-[#00e5ff] hover:bg-[#00e5ff]/10 hover:border-[#00e5ff]/60 shadow-[0_0_15px_rgba(0,229,255,0.05)]",
     danger:
-      "border-rose-600 bg-transparent text-rose-600 hover:bg-rose-50 dark:border-rose-500 dark:text-rose-500 dark:hover:bg-rose-500/10",
+      "border-rose-500/40 bg-transparent text-rose-400 hover:bg-rose-500/10 hover:border-rose-500/60",
     ghost:
-      "border-transparent bg-transparent text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-[var(--color-text-secondary)] dark:hover:bg-[var(--color-bg-panel)] dark:hover:text-[var(--color-text-primary)]"
+      "bg-transparent text-slate-400 hover:bg-white/5 hover:text-white"
   };
 
   const sizes = {
-    sm: "px-3 py-1 text-xs",
-    md: "px-6 py-2 text-sm",
-    lg: "px-8 py-3 text-base"
+    sm: "px-4 py-1.5 text-[10px] tracking-widest",
+    md: "px-6 py-2.5 text-xs tracking-wider",
+    lg: "px-8 py-3.5 text-sm tracking-widest"
   };
 
   return (

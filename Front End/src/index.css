@@ -3,12 +3,14 @@
 @variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --color-bg-space: #050814;
-  --color-electric-blue: #00e5ff;
-  --color-neon-cyan: #00ffff;
-  --color-neon-purple: #b026ff;
-  --color-neon-pink: #ff007f;
-  --color-neon-indigo: #4b00ff;
+  --color-bg-space: #020205;
+  --color-electric-blue: #0066ff;
+  --color-neon-cyan: #00e5ff;
+  --color-neon-purple: #a855f7;
+  --color-neon-pink: #f43f5e;
+  --color-neon-indigo: #6366f1;
+  --color-glass-card: rgba(8, 8, 12, 0.55);
+  --color-glass-border: rgba(255, 255, 255, 0.08);
   
   --font-space: 'Space Grotesk', sans-serif;
   --font-inter: 'Inter', sans-serif;
@@ -16,51 +18,144 @@
 
 @layer base {
   body {
-    @apply font-inter bg-slate-50 text-slate-900 transition-colors duration-500;
+    @apply font-inter bg-[#020205] text-slate-100 transition-colors duration-500 overflow-x-hidden;
   }
   
-  .dark body {
-    @apply bg-[var(--color-bg-space)] text-slate-200 overflow-x-hidden;
-  }
-
   h1, h2, h3, h4, h5, h6 {
-    @apply font-space font-bold tracking-tight;
+    @apply font-space font-bold tracking-tight text-white;
   }
 }
 
 @layer utilities {
   .glass-panel {
-    @apply bg-white/10 dark:bg-white/5 backdrop-blur-[20px] border border-white/20 dark:border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.3)] rounded-[24px];
+    background: rgba(4, 4, 8, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: 
+      0 4px 30px rgba(0, 0, 0, 0.5), 
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      inset 0 0 1px rgba(255, 255, 255, 0.1);
   }
   
+  .glass-panel-glow {
+    background: rgba(6, 6, 12, 0.75);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(0, 229, 255, 0.15);
+    box-shadow: 
+      0 8px 32px rgba(0, 229, 255, 0.04), 
+      0 0 20px rgba(0, 229, 255, 0.02),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+
   .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-r;
   }
 
-  .text-glow {
-    text-shadow: 0 0 10px rgba(255,255,255,0.5);
+  .text-glow-cyan {
+    text-shadow: 0 0 15px rgba(0, 229, 255, 0.5);
+  }
+
+  .text-glow-purple {
+    text-shadow: 0 0 15px rgba(168, 85, 247, 0.5);
+  }
+  
+  .text-glow-white {
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
   }
 }
 
-/* Animations */
-@keyframes orbit {
-  from { transform: rotate(0deg) translateX(150px) rotate(0deg); }
-  to { transform: rotate(360deg) translateX(150px) rotate(-360deg); }
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
 
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 229, 255, 0.3);
+}
+
+/* Animations */
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+  0%, 100% { transform: translateY(0px) scale(1); }
+  50% { transform: translateY(-6px) scale(1.01); }
+}
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 0.25; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.03); }
+}
+
+@keyframes spin-slow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes grid-move {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 40px; }
 }
 
 .animate-float {
   animation: float 6s ease-in-out infinite;
 }
 
-.orbit-container {
+.animate-pulse-slow {
+  animation: pulse-slow 8s ease-in-out infinite;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 40s linear infinite;
+}
+
+.animate-spin-reverse-slow {
+  animation: spin-slow 50s linear infinite reverse;
+}
+
+/* CSS grids and visual effects */
+.bg-grid-pattern {
+  background-size: 50px 50px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+}
+
+.bg-dot-pattern {
+  background-size: 30px 30px;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+}
+
+.glow-overlay {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 1px;
-  height: 1px;
+  border-radius: 9999px;
+  filter: blur(140px);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.15;
+}
+
+.glow-cyan {
+  background: #00e5ff;
+}
+
+.glow-purple {
+  background: #a855f7;
+}
+
+.glow-blue {
+  background: #0066ff;
+}
+
+.glow-pink {
+  background: #f43f5e;
 }

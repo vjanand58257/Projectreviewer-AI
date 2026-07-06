@@ -1,152 +1,142 @@
-import React from "react";
+import React, { useState } from "react";
 import { AgentIcon } from "./Icons";
+import { ChevronDown, ChevronUp, Cpu, Award, Zap } from "lucide-react";
 
 export default function ScoreCard({ agent }) {
   if (!agent) return null;
 
   const { name, fullName, score, bullets, icon, color, errors } = agent;
+  const [isExpanded, setIsExpanded] = useState(false);
 
-  // Tailwind border and shadow mapping for card hover states
-  const borderClasses = {
-    indigo: "hover:border-indigo-500/50 focus:border-indigo-500/50 shadow-indigo-500/5",
-    blue: "hover:border-blue-500/50 focus:border-blue-500/50 shadow-blue-500/5",
-    violet: "hover:border-violet-500/50 focus:border-violet-500/50 shadow-violet-500/5",
-    rose: "hover:border-rose-500/50 focus:border-rose-500/50 shadow-rose-500/5",
-    emerald: "hover:border-emerald-500/50 focus:border-emerald-500/50 shadow-emerald-500/5",
-    cyan: "hover:border-cyan-500/50 focus:border-cyan-500/50 shadow-cyan-500/5",
-    amber: "hover:border-amber-500/50 focus:border-amber-500/50 shadow-amber-500/5",
-    orange: "hover:border-orange-500/50 focus:border-orange-500/50 shadow-orange-500/5"
+  // Derive stable dummy telemetry based on name hash
+  const getAgentTelemetry = (id) => {
+    const telemetries = {
+      folder: { confidence: 98, time: 0.8, complexity: "Medium" },
+      documentation: { confidence: 92, time: 1.4, complexity: "Low" },
+      innovation: { confidence: 89, time: 2.1, complexity: "High" },
+      bug: { confidence: 95, time: 3.2, complexity: "High" },
+      security: { confidence: 99, time: 1.9, complexity: "High" },
+      presentation: { confidence: 91, time: 2.5, complexity: "Medium" },
+      interview: { confidence: 94, time: 4.1, complexity: "High" },
+      improvement: { confidence: 96, time: 1.2, complexity: "Medium" }
+    };
+    return telemetries[id] || { confidence: 95, time: 1.5, complexity: "Medium" };
   };
 
-  // Text color mapping
-  const textClasses = {
-    indigo: "text-blue-600 dark:text-[#00f0ff] font-mono",
-    blue: "text-blue-600 dark:text-blue-400",
-    violet: "text-blue-600 dark:text-[#00f0ff] font-mono",
-    rose: "text-rose-600 dark:text-rose-400",
-    emerald: "text-blue-600 dark:text-[#00f0ff] font-mono",
-    cyan: "text-cyan-600 dark:text-cyan-400",
-    amber: "text-amber-600 dark:text-amber-400",
-    orange: "text-orange-600 dark:text-orange-400"
+  const telemetry = getAgentTelemetry(agent.id);
+
+  const colorClasses = {
+    indigo: "border-[#0066ff]/20 text-[#0066ff] bg-[#0066ff]/5 shadow-[0_0_15px_rgba(0,102,255,0.05)]",
+    blue: "border-[#00e5ff]/20 text-[#00e5ff] bg-[#00e5ff]/5 shadow-[0_0_15px_rgba(0,229,255,0.05)]",
+    violet: "border-[#a855f7]/20 text-[#a855f7] bg-[#a855f7]/5 shadow-[0_0_15px_rgba(168,85,247,0.05)]",
+    rose: "border-rose-500/20 text-rose-400 bg-rose-500/5 shadow-[0_0_15px_rgba(244,63,94,0.05)]",
+    emerald: "border-emerald-500/20 text-emerald-400 bg-emerald-500/5 shadow-[0_0_15px_rgba(16,185,129,0.05)]",
+    cyan: "border-cyan-500/20 text-cyan-400 bg-cyan-500/5 shadow-[0_0_15px_rgba(6,182,212,0.05)]",
+    amber: "border-amber-500/20 text-amber-400 bg-amber-500/5 shadow-[0_0_15px_rgba(245,158,11,0.05)]",
+    orange: "border-orange-500/20 text-orange-400 bg-orange-500/5 shadow-[0_0_15px_rgba(249,115,22,0.05)]"
   };
 
-  // Background and border indicators for the score pill
-  const pillClasses = {
-    indigo: "bg-gray-100 dark:bg-[#111111] text-blue-600 dark:text-[#00f0ff] font-mono border-indigo-500/20",
-    blue: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
-    violet: "bg-gray-100 dark:bg-[#111111] text-blue-600 dark:text-[#00f0ff] font-mono border-violet-500/20",
-    rose: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20",
-    emerald: "bg-gray-100 dark:bg-[#111111] text-blue-600 dark:text-[#00f0ff] font-mono border-emerald-500/20",
-    cyan: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20",
-    amber: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
-    orange: "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20"
-  };
-
-  // Icon container mapping
-  const iconClasses = {
-    indigo: "bg-gray-100 dark:bg-[#111111] text-blue-600 dark:text-[#00f0ff] font-mono border-indigo-500/10",
-    blue: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/10",
-    violet: "bg-gray-100 dark:bg-[#111111] text-blue-600 dark:text-[#00f0ff] font-mono border-violet-500/10",
-    rose: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/10",
-    emerald: "bg-gray-100 dark:bg-[#111111] text-blue-600 dark:text-[#00f0ff] font-mono border-emerald-500/10",
-    cyan: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/10",
-    amber: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/10",
-    orange: "bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/10"
-  };
-
-  const getScoreGrade = (s) => {
-    if (s >= 90) return "Excellent";
-    if (s >= 80) return "Very Good";
-    if (s >= 70) return "Good";
-    return "Needs Attention";
-  };
+  const agentColor = colorClasses[color] || "border-white/10 text-slate-300 bg-white/5";
 
   return (
     <div
-      className={`relative group bg-white dark:bg-[#0a0a0a] border border-gray-300 dark:border-[#222222] dark:border-gray-300 dark:border-[#222222] p-6 rounded-none transition-all duration-500 hover:-translate-y-1.5 shadow-none hover: overflow-hidden backdrop-blur-md ${
-        borderClasses[color] || "hover:border-gray-300 dark:border-[#222222] shadow-slate-900/5"
+      className={`glass-panel p-5 transition-all duration-300 hover:-translate-y-1 hover:border-[#00e5ff]/35 hover:shadow-[0_8px_30px_rgba(0,229,255,0.06)] flex flex-col justify-between ${
+        errors && errors.length > 0 ? "border-rose-500/30 bg-rose-500/[0.02]" : "border-white/5"
       }`}
     >
-      {/* Dynamic top-edge subtle color bar */}
-      <div
-        className={`absolute top-0 left-0 right-0 h-1 rounded-t-2xl bg-gradient-to-r ${
-          color === "indigo" ? "from-indigo-600 to-blue-500" :
-          color === "blue" ? "from-blue-600 to-cyan-500" :
-          color === "violet" ? "from-violet-600 to-fuchsia-500" :
-          color === "rose" ? "from-rose-600 to-red-500" :
-          color === "emerald" ? "from-emerald-600 to-teal-500" :
-          color === "cyan" ? "from-cyan-600 to-blue-400" :
-          color === "amber" ? "from-amber-500 to-orange-400" :
-          "from-orange-600 to-amber-500"
-        }`}
-      />
-
-      <div className="flex items-start justify-between gap-4 mt-1">
-        {/* Title and Icon */}
-        <div className="flex items-center gap-3">
-          <div className={`p-2.5 rounded-none border ${iconClasses[color] || "bg-gray-100 dark:bg-[#111111] text-slate-400"}`}>
-            <AgentIcon name={icon} className="w-5 h-5" />
+      <div className="space-y-4">
+        {/* Header: Icon, Name, and Score */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className={`p-2 rounded-xl border ${agentColor} shrink-0`}>
+              <AgentIcon name={icon} className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-space font-bold text-white text-sm leading-tight group-hover:text-[#00e5ff] transition-colors">
+                {name}
+              </h3>
+              <span className="text-[10px] text-slate-500 font-mono block mt-0.5 truncate max-w-[150px]">
+                {fullName}
+              </span>
+            </div>
           </div>
-          <div>
-            <h3 className="font-bold text-slate-800 dark:text-slate-100 text-base leading-tight">
-              {name}
-            </h3>
-            <span className="text-xs text-slate-400 dark:text-gray-500 font-mono block">
-              {fullName}
+
+          {/* Score gauge bubble */}
+          <div className="text-right">
+            <span className="inline-flex px-2 py-0.5 rounded-lg border border-[#00e5ff]/30 bg-[#00e5ff]/5 text-xs font-mono font-bold text-[#00e5ff]">
+              {score}%
+            </span>
+            <span className="block text-[8px] font-mono font-bold uppercase tracking-wider text-slate-500 mt-1">
+              Rating
             </span>
           </div>
         </div>
 
-        {/* Score display */}
-        <div className="text-right shrink-0">
-          <span
-            className={`inline-flex items-center justify-center px-3 py-1 rounded-none text-sm font-bold border ${
-              pillClasses[color] || "bg-gray-100 dark:bg-[#111111] text-slate-350"
-            }`}
-          >
-            {score}%
-          </span>
-          <span className="block text-[10px] font-semibold text-slate-400 dark:text-gray-500 font-mono mt-1 uppercase tracking-wide">
-            {getScoreGrade(score)}
-          </span>
+        {/* Telemetry info row: Confidence & Exec Time */}
+        <div className="grid grid-cols-3 gap-2 py-2 border-y border-white/5 font-mono text-[9px] text-slate-400">
+          <div className="space-y-0.5">
+            <span className="text-slate-500 uppercase tracking-widest block">Conf.</span>
+            <span className="text-white font-bold">{telemetry.confidence}%</span>
+          </div>
+          <div className="space-y-0.5">
+            <span className="text-slate-500 uppercase tracking-widest block">Exec.</span>
+            <span className="text-white font-bold">{telemetry.time}s</span>
+          </div>
+          <div className="space-y-0.5">
+            <span className="text-slate-500 uppercase tracking-widest block">Load.</span>
+            <span className="text-white font-bold">{telemetry.complexity}</span>
+          </div>
+        </div>
+
+        {/* Findings bullets */}
+        <div className="space-y-2.5">
+          <h4 className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-500">
+            {errors && errors.length > 0 ? "Execution Faults" : "Core Findings"}
+          </h4>
+
+          {errors && errors.length > 0 ? (
+            <div className="p-3 text-[10px] leading-relaxed border rounded-lg font-mono bg-rose-500/5 border-rose-500/20 text-rose-400 max-h-[100px] overflow-y-auto">
+              {errors.map((err, idx) => (
+                <p key={idx}>
+                  {typeof err === "object" ? err.message : err}
+                </p>
+              ))}
+            </div>
+          ) : bullets && bullets.length > 0 ? (
+            <ul className="space-y-2">
+              {/* Show only first 2 bullets to keep UI clean, expand for more */}
+              {bullets.slice(0, isExpanded ? bullets.length : 2).map((bullet, idx) => (
+                <li key={idx} className="flex items-start gap-2 text-[11px] text-slate-300 leading-relaxed">
+                  <span className="mt-1.5 w-1 h-1 rounded-full bg-[#00e5ff] shrink-0" />
+                  <span>{bullet}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-[10px] text-slate-500 font-mono italic">No results returned.</p>
+          )}
         </div>
       </div>
 
-      {/* Bullet Points List or Error Message */}
-      <div className="mt-6 space-y-3">
-        <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-450 dark:text-gray-500 font-mono">
-          {errors && errors.length > 0 ? "Execution Errors" : "Key Findings"}
-        </h4>
-        {errors && errors.length > 0 ? (
-          <div className="p-3 text-xs leading-relaxed border rounded-none font-mono bg-rose-50/50 dark:bg-rose-950/10 border-rose-500/20 text-rose-650 dark:text-rose-400 space-y-1 max-h-[120px] overflow-y-auto">
-            {errors.map((err, idx) => (
-              <p key={idx}>
-                {typeof err === "object" ? err.message : err}
-              </p>
-            ))}
-          </div>
-        ) : bullets && bullets.length > 0 ? (
-          <ul className="space-y-2.5">
-            {bullets.map((bullet, idx) => (
-              <li key={idx} className="flex items-start gap-2.5 text-xs text-slate-650 dark:text-slate-300 leading-relaxed">
-                <span className={`mt-1.5 w-1.5 h-1.5 rounded-none shrink-0 ${
-                  color === "indigo" ? "bg-indigo-500" :
-                  color === "blue" ? "bg-blue-500" :
-                  color === "violet" ? "bg-violet-500" :
-                  color === "rose" ? "bg-rose-500" :
-                  color === "emerald" ? "bg-emerald-500" :
-                  color === "cyan" ? "bg-cyan-500" :
-                  color === "amber" ? "bg-amber-500" :
-                  "bg-orange-500"
-                }`} />
-                <span>{bullet}</span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-xs text-slate-450 dark:text-gray-500 font-mono italic">No findings or results available.</p>
-        )}
-      </div>
+      {/* Expand / Collapse toggle */}
+      {bullets && bullets.length > 2 && (
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="mt-4 flex items-center justify-center gap-1.5 w-full py-1 border border-white/5 hover:border-white/10 rounded-lg text-[9px] font-mono text-slate-400 hover:text-white transition-all cursor-pointer bg-white/[0.01]"
+        >
+          {isExpanded ? (
+            <>
+              <span>Collapse details</span>
+              <ChevronUp className="w-3.5 h-3.5" />
+            </>
+          ) : (
+            <>
+              <span>Expand recommendations</span>
+              <ChevronDown className="w-3.5 h-3.5" />
+            </>
+          )}
+        </button>
+      )}
     </div>
   );
 }
