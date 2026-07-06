@@ -3,68 +3,64 @@
 @variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --color-brand-cyan: #00f0ff;
-  --color-brand-cyan-dim: rgba(0, 240, 255, 0.1);
-  --color-brand-amber: #ffb000;
-  --color-bg-dark: #0a0a0a;
-  --color-bg-panel: #111111;
-  --color-border-subtle: #222222;
-  --color-text-primary: #e0e0e0;
-  --color-text-secondary: #888888;
-  --font-mono: 'JetBrains Mono', monospace;
-  --font-sans: 'Inter', sans-serif;
+  --color-bg-space: #050814;
+  --color-electric-blue: #00e5ff;
+  --color-neon-cyan: #00ffff;
+  --color-neon-purple: #b026ff;
+  --color-neon-pink: #ff007f;
+  --color-neon-indigo: #4b00ff;
+  
+  --font-space: 'Space Grotesk', sans-serif;
+  --font-inter: 'Inter', sans-serif;
 }
 
 @layer base {
   body {
-    @apply font-sans bg-gray-50 text-gray-900 transition-colors duration-300;
+    @apply font-inter bg-slate-50 text-slate-900 transition-colors duration-500;
   }
   
   .dark body {
-    @apply bg-[var(--color-bg-dark)] text-[var(--color-text-primary)];
-    /* Technical Grid Background for Dark Mode */
-    background-image: 
-      linear-gradient(to right, #ffffff05 1px, transparent 1px),
-      linear-gradient(to bottom, #ffffff05 1px, transparent 1px);
-    background-size: 32px 32px;
+    @apply bg-[var(--color-bg-space)] text-slate-200 overflow-x-hidden;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-mono tracking-tight;
+    @apply font-space font-bold tracking-tight;
   }
 }
 
-@layer components {
-  .tech-panel {
-    @apply bg-white border border-gray-200 shadow-sm rounded-none;
-  }
-  .dark .tech-panel {
-    @apply bg-[var(--color-bg-panel)] border-[var(--color-border-subtle)] shadow-none;
-    box-shadow: 0 0 10px rgba(0,0,0,0.5);
-  }
-
-  .tech-button {
-    @apply font-mono uppercase tracking-wider text-sm px-4 py-2 border-2 transition-all rounded-none;
+@layer utilities {
+  .glass-panel {
+    @apply bg-white/10 dark:bg-white/5 backdrop-blur-[20px] border border-white/20 dark:border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.3)] rounded-[24px];
   }
   
-  .tech-button-primary {
-    @apply border-blue-600 bg-blue-600 text-white hover:bg-blue-700 hover:border-blue-700;
-  }
-  .dark .tech-button-primary {
-    @apply border-[var(--color-brand-cyan)] bg-[var(--color-brand-cyan-dim)] text-[var(--color-brand-cyan)] hover:bg-[var(--color-brand-cyan)] hover:text-black shadow-[0_0_10px_var(--color-brand-cyan-dim)];
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r;
   }
 
-  .tech-accent-text {
-    @apply font-mono text-blue-600;
+  .text-glow {
+    text-shadow: 0 0 10px rgba(255,255,255,0.5);
   }
-  .dark .tech-accent-text {
-    @apply text-[var(--color-brand-cyan)];
-  }
+}
 
-  .tech-border {
-    @apply border-gray-300;
-  }
-  .dark .tech-border {
-    @apply border-[var(--color-border-subtle)];
-  }
+/* Animations */
+@keyframes orbit {
+  from { transform: rotate(0deg) translateX(150px) rotate(0deg); }
+  to { transform: rotate(360deg) translateX(150px) rotate(-360deg); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.orbit-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1px;
+  height: 1px;
 }
